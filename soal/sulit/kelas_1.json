@@ -1,0 +1,315 @@
+{
+    "zone": "mudah",
+    "lessons_kelas_1": [
+        {
+            "nomor": 1,
+            "title": "./assets/soal/mudah/kelas_1/questions/1/level_1.png",
+            "questions": [
+                {
+                    "soal_id": "./assets/soal/1.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/1/1.png",
+                    "answer": "./assets/jawaban/1.png"
+                },
+                {
+                    "soal_id": "./assets/soal/2.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/1/2.png",
+                    "answer": "./assets/jawaban/1.png"
+                },
+                {
+                    "soal_id": "./assets/soal/3.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/1/3.png",
+                    "answer": "./assets/jawaban/1.png"
+                },
+                {
+                    "soal_id": "./assets/soal/4.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/1/4.png",
+                    "answer": "./assets/jawaban/1.png"
+                },
+                {
+                    "soal_id": "./assets/soal/5.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/1/5.png",
+                    "answer": "./assets/jawaban/1.png"
+                }
+            ]
+        },
+        {
+            "nomor": 2,
+            "title": "./assets/soal/mudah/kelas_1/questions/2/level_2.png",
+            "questions": [
+                {
+                    "soal_id": "./assets/soal/1.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/2/1.png",
+                    "answer": "./assets/jawaban/2.png"
+                },
+                {
+                    "soal_id": "./assets/soal/2.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/2/2.png",
+                    "answer": "./assets/jawaban/2.png"
+                },
+                {
+                    "soal_id": "./assets/soal/3.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/2/3.png",
+                    "answer": "./assets/jawaban/2.png"
+                },
+                {
+                    "soal_id": "./assets/soal/4.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/2/4.png",
+                    "answer": "./assets/jawaban/2.png"
+                },
+                {
+                    "soal_id": "./assets/soal/5.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/2/5.png",
+                    "answer": "./assets/jawaban/2.png"
+                }
+            ]
+        },
+        {
+            "nomor": 3,
+            "title": "./assets/soal/mudah/kelas_1/questions/3/level_3.png",
+            "questions": [
+                {
+                    "soal_id": "./assets/soal/1.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/3/1.png",
+                    "answer": "./assets/jawaban/3.png"
+                },
+                {
+                    "soal_id": "./assets/soal/2.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/3/2.png",
+                    "answer": "./assets/jawaban/3.png"
+                },
+                {
+                    "soal_id": "./assets/soal/3.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/3/3.png",
+                    "answer": "./assets/jawaban/3.png"
+                },
+                {
+                    "soal_id": "./assets/soal/4.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/3/4.png",
+                    "answer": "./assets/jawaban/3.png"
+                },
+                {
+                    "soal_id": "./assets/soal/5.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/3/5.png",
+                    "answer": "./assets/jawaban/3.png"
+                }
+            ]
+        },
+        {
+            "nomor": 4,
+            "title": "./assets/soal/mudah/kelas_1/questions/4/level_4.png",
+            "questions": [
+                {
+                    "soal_id": "./assets/soal/1.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/4/1.png",
+                    "answer": "./assets/jawaban/4.png"
+                },
+                {
+                    "soal_id": "./assets/soal/2.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/4/2.png",
+                    "answer": "./assets/jawaban/4.png"
+                },
+                {
+                    "soal_id": "./assets/soal/3.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/4/3.png",
+                    "answer": "./assets/jawaban/4.png"
+                },
+                {
+                    "soal_id": "./assets/soal/4.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/4/4.png",
+                    "answer": "./assets/jawaban/4.png"
+                },
+                {
+                    "soal_id": "./assets/soal/5.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/4/5.png",
+                    "answer": "./assets/jawaban/4.png"
+                }
+            ]
+        },
+        {
+            "nomor": 5,
+            "title": "./assets/soal/mudah/kelas_1/questions/5/level_5.png",
+            "questions": [
+                {
+                    "soal_id": "./assets/soal/1.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/5/1.png",
+                    "answer": "./assets/jawaban/5.png"
+                },
+                {
+                    "soal_id": "./assets/soal/2.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/5/2.png",
+                    "answer": "./assets/jawaban/5.png"
+                },
+                {
+                    "soal_id": "./assets/soal/3.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/5/3.png",
+                    "answer": "./assets/jawaban/5.png"
+                },
+                {
+                    "soal_id": "./assets/soal/4.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/5/4.png",
+                    "answer": "./assets/jawaban/5.png"
+                },
+                {
+                    "soal_id": "./assets/soal/5.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/5/5.png",
+                    "answer": "./assets/jawaban/5.png"
+                }
+            ]
+        },
+        {
+            "nomor": 6,
+            "title": "./assets/soal/mudah/kelas_1/questions/6/level_6.png",
+            "questions": [
+                {
+                    "soal_id": "./assets/soal/1.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/6/1.png",
+                    "answer": "./assets/jawaban/6.png"
+                },
+                {
+                    "soal_id": "./assets/soal/2.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/6/2.png",
+                    "answer": "./assets/jawaban/6.png"
+                },
+                {
+                    "soal_id": "./assets/soal/3.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/6/3.png",
+                    "answer": "./assets/jawaban/6.png"
+                },
+                {
+                    "soal_id": "./assets/soal/4.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/6/4.png",
+                    "answer": "./assets/jawaban/6.png"
+                },
+                {
+                    "soal_id": "./assets/soal/5.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/6/6.png",
+                    "answer": "./assets/jawaban/6.png"
+                }
+            ]
+        },
+        {
+            "nomor": 7,
+            "title": "./assets/soal/mudah/kelas_1/questions/7/level_7.png",
+            "questions": [
+                {
+                    "soal_id": "./assets/soal/1.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/7/1.png",
+                    "answer": "./assets/jawaban/7.png"
+                },
+                {
+                    "soal_id": "./assets/soal/2.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/7/2.png",
+                    "answer": "./assets/jawaban/7.png"
+                },
+                {
+                    "soal_id": "./assets/soal/3.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/7/3.png",
+                    "answer": "./assets/jawaban/7.png"
+                },
+                {
+                    "soal_id": "./assets/soal/4.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/7/4.png",
+                    "answer": "./assets/jawaban/7.png"
+                },
+                {
+                    "soal_id": "./assets/soal/5.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/7/7.png",
+                    "answer": "./assets/jawaban/7.png"
+                }
+            ]
+        },
+        {
+            "nomor": 8,
+            "title": "./assets/soal/mudah/kelas_1/questions/8/level_8.png",
+            "questions": [
+                {
+                    "soal_id": "./assets/soal/1.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/8/1.png",
+                    "answer": "./assets/jawaban/8.png"
+                },
+                {
+                    "soal_id": "./assets/soal/2.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/8/2.png",
+                    "answer": "./assets/jawaban/8.png"
+                },
+                {
+                    "soal_id": "./assets/soal/3.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/8/3.png",
+                    "answer": "./assets/jawaban/8.png"
+                },
+                {
+                    "soal_id": "./assets/soal/4.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/8/4.png",
+                    "answer": "./assets/jawaban/8.png"
+                },
+                {
+                    "soal_id": "./assets/soal/5.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/8/8.png",
+                    "answer": "./assets/jawaban/8.png"
+                }
+            ]
+        },
+        {
+            "nomor": 9,
+            "title": "./assets/soal/mudah/kelas_1/questions/9/level_9.png",
+            "questions": [
+                {
+                    "soal_id": "./assets/soal/1.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/9/1.png",
+                    "answer": "./assets/jawaban/9.png"
+                },
+                {
+                    "soal_id": "./assets/soal/2.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/9/2.png",
+                    "answer": "./assets/jawaban/9.png"
+                },
+                {
+                    "soal_id": "./assets/soal/3.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/9/3.png",
+                    "answer": "./assets/jawaban/9.png"
+                },
+                {
+                    "soal_id": "./assets/soal/4.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/9/4.png",
+                    "answer": "./assets/jawaban/9.png"
+                },
+                {
+                    "soal_id": "./assets/soal/5.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/9/9.png",
+                    "answer": "./assets/jawaban/9.png"
+                }
+            ]
+        },
+        {
+            "nomor": 10,
+            "title": "./assets/soal/mudah/kelas_1/questions/10/level_10.png",
+            "questions": [
+                {
+                    "soal_id": "./assets/soal/1.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/10/1.png",
+                    "answer": "./assets/jawaban/10.png"
+                },
+                {
+                    "soal_id": "./assets/soal/2.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/10/2.png",
+                    "answer": "./assets/jawaban/10.png"
+                },
+                {
+                    "soal_id": "./assets/soal/3.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/10/3.png",
+                    "answer": "./assets/jawaban/10.png"
+                },
+                {
+                    "soal_id": "./assets/soal/4.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/10/4.png",
+                    "answer": "./assets/jawaban/10.png"
+                },
+                {
+                    "soal_id": "./assets/soal/5.png",
+                    "question": "./assets/soal/mudah/kelas_1/questions/10/10.png",
+                    "answer": "./assets/jawaban/10.png"
+                }
+            ]
+        }
+    ]
+}
