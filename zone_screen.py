@@ -63,7 +63,6 @@ class MainWidget(RelativeLayout):
         )
         self.add_widget(title_img)
 
-        # self.zone_names = ["aritmatika", "bangun", "pecahan"]
         self.zone_names = ["kelas_1", "kelas_2", "kelas_3"]
         self.zone_buttons = []
         button_sources = [

@@ -21,9 +21,11 @@ from components.common_ui import ImageButton
 from components.popup.result_popup import ResultPopup
 from components.popup.show_result_finish_popup import ResultPopupFinish
 from config import Config
+from utils.game_utils import GameUtils
+from utils.constants import *
 
 resource_add_path("./assets/fonts/Bungee/")
-LabelBase.register(name="Bungee", fn_regular="Bungee-Regular.ttf")
+LabelBase.register(name="Bungee", fn_regular=FONTS_PATH)
 
 
 class SoalScreen(Screen):
@@ -37,28 +39,18 @@ class SoalScreen(Screen):
         self.avatar_path = avatar_path
         self.current_question = 0
         self.score = 0
+        self.level_score = 0
         self.questions_data = self.load_questions()
         self.questions = self.questions_data["questions"]
         self.popup = None
-        self.user_score = self.load_user_score()
+        self.user_score = GameUtils.get_user_score()
 
         self.main_layout = RelativeLayout()
 
-        self.avatar_positions = {
-            1: {"center_x": 0.05, "center_y": 0.5},
-            2: {"center_x": 0.9, "center_y": 0.5},
-            3: {"center_x": 0.05, "center_y": 0.41},
-            4: {"center_x": 0.9, "center_y": 0.41},
-        }
+        self.background = GameUtils.setup_background(self.main_layout)
+        self.setup_ui()
 
-        # Background
-        with self.main_layout.canvas.before:
-            self.background = Rectangle(
-                source="./assets/bg.png", pos=self.pos, size=self.size
-            )
-        self.main_layout.bind(size=self._update_rect, pos=self._update_rect)
-
-        # Back button
+    def setup_ui(self):
         back_btn = ImageButton(
             source="./assets/backk.png",
             size_hint=(None, None),
@@ -68,7 +60,6 @@ class SoalScreen(Screen):
         back_btn.bind(on_press=self.go_back)
         self.main_layout.add_widget(back_btn)
 
-        # Title
         title_image = Image(
             source=self.questions_data["title"],
             size_hint=(None, None),
@@ -84,7 +75,6 @@ class SoalScreen(Screen):
         )
         self.main_layout.add_widget(self.soal_id_image)
 
-        # Content layout
         self.content_layout = FloatLayout(
             size_hint=(0.9, 0.7),
             pos_hint={"center_x": 0.5, "center_y": 0.4},
@@ -104,14 +94,13 @@ class SoalScreen(Screen):
 
         self.main_layout.add_widget(self.content_layout)
 
-        # Add animated avatar
         self.animated_avatar = AnimatedImage(
             size_hint=(None, None),
             size=Config.get_animated_avatar_size(),
             base_path=self.avatar_path,
             frame_count=6,
             fps=10,
-            pos_hint=self.avatar_positions[1],
+            pos_hint=AVATAR_POSITIONS[1],
             opacity=0,
         )
         self.main_layout.add_widget(self.animated_avatar)
@@ -147,7 +136,7 @@ class SoalScreen(Screen):
 
             base_path = f"./assets/soal/{self.difficulty}/{self.zone}/option/{self.level}/soal_{self.current_question + 1}/"
 
-            for i in range(1, 5):  # Assuming 4 options for each question
+            for i in range(1, 5):
                 option_path = os.path.join(base_path, f"{i}.png")
                 option_button = ImageButton(
                     source=option_path,
@@ -165,23 +154,22 @@ class SoalScreen(Screen):
 
     def check_answer(self, instance, option_number):
         self.animated_avatar.opacity = 1
-        self.animated_avatar.pos_hint = self.avatar_positions[option_number]
+        self.animated_avatar.pos_hint = AVATAR_POSITIONS[option_number]
         time_taken = time.time() - self.question_start_time
         correct_answer = self.questions[self.current_question]["answer"]
 
         is_correct = instance.source == correct_answer
-        score_increase = 0
         if is_correct:
-            if time_taken <= self.time_threshold:
-                score_increase = 500
-            else:
-                score_increase = 250
-            self.score += 1
+            score_increase = (
+                SCORE_FAST_CORRECT
+                if time_taken <= QUESTION_TIME_THRESHOLD
+                else SCORE_CORRECT
+            )
         else:
-            score_increase = -100
-
+            score_increase = SCORE_INCORRECT
+        self.level_score += score_increase
         self.user_score += score_increase
-        self.save_user_score()
+        GameUtils.save_user_score(self.user_score)
 
         if self.current_question == len(self.questions) - 1:
             self.show_result()
@@ -225,6 +213,7 @@ class SoalScreen(Screen):
             total_score=total_score,
             star_rating=star_rating,
             level=self.level,
+            level_score=self.level_score,
             on_play_again=self.restart_quiz,
             on_next_level=self.go_to_next_level,
         )
@@ -244,22 +233,13 @@ class SoalScreen(Screen):
         ).run()
 
     def calculate_star_rating(self):
-        score_percentage = (self.score / len(self.questions)) * 100
-        if score_percentage == 100:
-            return "3B"
-        elif score_percentage >= 80:
-            return "2_5B"
-        elif score_percentage >= 60:
-            return "2B"
-        elif score_percentage >= 40:
-            return "1_5B"
-        else:
-            return "1B"
+        return GameUtils.calculate_star_rating(self.score, len(self.questions))
 
     def restart_quiz(self, instance):
         self.dismiss_popup()
         self.current_question = 0
         self.score = 0
+        self.level_score = 0
         self.content_layout.clear_widgets()
         self.content_layout.add_widget(self.question_image)
         self.content_layout.add_widget(self.options_layout)
@@ -267,45 +247,47 @@ class SoalScreen(Screen):
 
     def update_user_progress(self):
         store = JsonStore("user_progress.json")
-        current_progress = store.get("user_progress")
-        current_level = current_progress.get("current_level", 1)
-        if "level_scores" not in current_progress:
-            current_progress["level_scores"] = {}
+        current_progress = (
+            store.get("user_progress") if store.exists("user_progress") else {}
+        )
+
+        current_level_key = f"{self.zone}_{self.difficulty}_current_level"
+        level_scores_key = f"{self.zone}_{self.difficulty}_level_scores"
+
+        current_level = current_progress.get(current_level_key, 1)
+        level_scores = current_progress.get(level_scores_key, {})
 
         star_rating = self.calculate_star_rating()
 
-        # Store the star rating for this level
         level_key = f"{self.zone}_{self.difficulty}_{self.level}"
-        existing_score = current_progress["level_scores"].get(level_key, {})
+        existing_score = level_scores.get(level_key, {})
         existing_star_rating = existing_score.get("star_rating", "0B")
         if self.compare_star_ratings(star_rating, existing_star_rating) > 0:
-            # Current star rating is better, update the score
-            current_progress["level_scores"][level_key] = {
+
+            level_scores[level_key] = {
                 "score": self.score,
                 "total_questions": len(self.questions),
                 "star_rating": star_rating,
             }
         else:
-            # Existing star rating is better or equal, keep the existing score
-            if level_key not in current_progress["level_scores"]:
-                # If it's a new entry, add it with the current score
-                current_progress["level_scores"][level_key] = {
+
+            if level_key not in level_scores:
+
+                level_scores[level_key] = {
                     "score": self.score,
                     "total_questions": len(self.questions),
                     "star_rating": star_rating,
                 }
-            # else: do nothing, keep the existing score
 
-        # Update current level if needed
         if self.level == current_level and self.score > 0:
-            current_progress["current_level"] = current_level + 1
+            current_progress[current_level_key] = current_level + 1
 
-        # Save all updates
+        current_progress[level_scores_key] = level_scores
         store.put("user_progress", **current_progress)
 
     def compare_star_ratings(self, rating1, rating2):
-        # Helper method to compare star ratings
-        rating_order = ["1B", "1_5B", "2B", "2_5B", "3B"]
+
+        rating_order = ["0B", "1B", "1_5B", "2B", "2_5B", "3B"]
         return rating_order.index(rating1) - rating_order.index(rating2)
 
     def _update_rect(self, instance, value):

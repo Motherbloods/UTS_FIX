@@ -56,13 +56,10 @@ class ResultPopup(Popup):
             pos_hint={"center_x": 0.2, "center_y": 0.5},
         )
         content.add_widget(trophy)
-
-        # Spinner label
-        start_value = user_score - score_increase
-        end_value = user_score
+        score = 0 if score_increase == -100 else score_increase
         self.spinner = SpinnerLabel(
-            start_value=start_value,
-            end_value=end_value,
+            start_value=0,
+            end_value=score,
             size_hint=(None, None),
             size=(100, 50),
             pos_hint={"center_x": 0.57, "center_y": 0.5},

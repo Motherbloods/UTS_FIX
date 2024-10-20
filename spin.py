@@ -7,10 +7,9 @@ from kivy.clock import Clock
 from kivy.core.text import LabelBase
 from kivy.resources import resource_add_path
 
-# Ensure the font path is correct
-resource_add_path("./assets/fonts/Bungee/")  # Adjust to the actual font folder location
 
-# Register the Bungee font
+resource_add_path("./assets/fonts/Bungee/")
+
 LabelBase.register(name="Bungee", fn_regular="Bungee-Regular.ttf")
 
 
@@ -33,7 +32,7 @@ class SpinnerLabel(Label):
 
     def spin_animation(self, *args):
         if self.current_value < self.end_value:
-            # Adjust duration to complete in about 4 seconds
+
             duration = (
                 4
                 * (self.end_value - self.current_value)

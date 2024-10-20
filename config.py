@@ -2,14 +2,12 @@ from kivy.core.window import Window
 
 
 class Config:
-    # Base width and height
+
     BASE_WIDTH = 450
     BASE_HEIGHT = int(BASE_WIDTH * (16 / 9))
 
-    # Get the current screen size
     SCREEN_WIDTH, SCREEN_HEIGHT = Window.size
 
-    # Calculate the scale factor
     SCALE_X = SCREEN_WIDTH / BASE_WIDTH
     SCALE_Y = SCREEN_HEIGHT / BASE_HEIGHT
 
@@ -25,7 +23,6 @@ class Config:
     def scaled_font_size(cls, size):
         return size * min(cls.SCALE_X, cls.SCALE_Y)
 
-    # Common sizes and positions
     @classmethod
     def get_avatar_size(cls, x, y):
         return cls.scaled_size(x, y)
@@ -58,7 +55,6 @@ class Config:
     def get_image_zone_size(cls):
         return cls.scaled_size(500, 240)
 
-    # Popup sizes
     @classmethod
     def get_avatar_popup_size(cls):
         return cls.scaled_size(600, 600)
@@ -69,7 +65,6 @@ class Config:
         height = width * (625 / 1080)
         return (width, height)
 
-    # Font sizes
     @classmethod
     def get_title_font_size(cls):
         return cls.scaled_font_size(32)
@@ -78,5 +73,4 @@ class Config:
     def get_label_font_size(cls):
         return cls.scaled_font_size(24)
 
-    # Colors
     CUSTOM_COLOR = "#050a30"

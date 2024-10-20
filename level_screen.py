@@ -17,9 +17,10 @@ from kivy.uix.label import Label
 from components.popup.locked_level_popup import LockedLevel
 from kivy.uix.boxlayout import BoxLayout
 from soal_screen import SoalApp
+from utils.game_utils import GameUtils
+from utils.constants import *
 
-LabelBase.register(name="Bungee", fn_regular="./assets/fonts/Bungee/Bungee-Regular.ttf")
-CUSTOM_COLOR = get_color_from_hex("#050a30")
+LabelBase.register(name="Bungee", fn_regular=FONTS_PATH)
 
 
 class LevelScreen(RelativeLayout):
@@ -40,13 +41,10 @@ class LevelScreen(RelativeLayout):
 
         Window.size = MainApp.get_window_size()
 
-        with self.canvas.before:
-            self.background = Rectangle(
-                source="./assets/bg.png",
-                pos=self.pos,
-                size=self.size,
-            )
-        self.bind(size=self._update_rect, pos=self._update_rect)
+        self.background = GameUtils.setup_background(self)
+        self.setup_ui()
+
+    def setup_ui(self):
         back_btn = ImageButton(
             source="./assets/backk.png",
             size_hint=(None, None),
@@ -105,7 +103,10 @@ class LevelScreen(RelativeLayout):
         icons_layout = BoxLayout(
             orientation="horizontal",
             size_hint=(None, None),
-            size=(Window.width * 0.4, Window.height * 0.2),
+            size=(
+                Window.width * 0.6,
+                Window.height * 0.2,
+            ),  # Increased width to accommodate hearts
             pos_hint={"center_x": 0.5, "center_y": 0.9},
             spacing=20,
         )
@@ -142,12 +143,10 @@ class LevelScreen(RelativeLayout):
             spacing=5,
         )
 
-        # Stars image
         stars_image = Image(
             source="./assets/stars.png", size_hint=(None, None), size=(40, 40)
         )
 
-        # Stars label
         total_stars = self.calculate_total_stars()
         stars_text = Label(
             text=f"{total_stars:.1f}",
@@ -157,35 +156,56 @@ class LevelScreen(RelativeLayout):
             font_size="16sp",
         )
 
-        # Add the image and label to the stars layout
         stars_layout.add_widget(stars_image)
         stars_layout.add_widget(stars_text)
 
-        # Add trophy and stars layouts to the horizontal layout
         icons_layout.add_widget(trophy_layout)
         icons_layout.add_widget(stars_layout)
 
-        # Add the horizontal layout to the main widget
+        # Add hearts
+        hearts_layout = BoxLayout(
+            orientation="horizontal",
+            size_hint=(None, None),
+            spacing=5,
+        )
+        for i in range(1, 6):
+            heart_image = Image(
+                source=f"./assets/heart{i}.png",
+                size_hint=(None, None),
+                size=(30, 30),  # Adjust size as needed
+            )
+            hearts_layout.add_widget(heart_image)
+
+        icons_layout.add_widget(hearts_layout)
+
         self.add_widget(icons_layout)
 
     def get_level_scores(self):
-        if self.store.exists("user_progress"):
-            progress = self.store.get("user_progress")
-            return progress.get("level_scores", {})
-        return {}
+        progress = GameUtils.get_user_progress()
+        return progress.get(f"{self.zone_name}_{self.difficulty}_level_scores", {})
 
     def get_level_image_path(self, level):
         if level > self.current_level:
             return "./assets/level/kunci.png"
 
-        level_key = f"{self.zone_name}_{self.difficulty}_{level}"
+        level_key = f"{level}"
         level_data = self.level_scores.get(level_key, {})
         star_rating = level_data.get("star_rating", "0B")
 
         if star_rating == "0B":
             return f"./assets/level/0B/{level}.png"
-
-        return f"./assets/level/{star_rating}/{level}.png"
+        elif star_rating == "1B":
+            return f"./assets/level/1B/{level}.png"
+        elif star_rating == "1_5B":
+            return f"./assets/level/1_5B/{level}.png"
+        elif star_rating == "2B":
+            return f"./assets/level/2B/{level}.png"
+        elif star_rating == "2_5B":
+            return f"./assets/level/2_5B/{level}.png"
+        elif star_rating == "3B":
+            return f"./assets/level/3B/{level}.png"
+        else:
+            return f"./assets/level/0B/{level}.png"
 
     def calculate_total_stars(self):
         total_stars = 0
@@ -204,12 +224,8 @@ class LevelScreen(RelativeLayout):
         return total_stars
 
     def get_current_level(self):
-        if self.store.exists("user_progress"):
-            print("ini kepanggil")
-            return self.store.get("user_progress")["current_level"]
-        else:
-            self.store.put("user_progress", current_level=1)
-            return 1
+        progress = GameUtils.get_user_progress()
+        return progress.get(f"{self.zone_name}_{self.difficulty}_current_level", 1)
 
     def show_locked_popup(self):
         popup = LockedLevel(path="./assets/popup.png")
@@ -230,7 +246,13 @@ class LevelScreen(RelativeLayout):
             self.show_locked_popup()
 
     def update_current_level(self, new_level):
-        self.store.put("user_progress", current_level=new_level)
+        progress = (
+            self.store.get("user_progress")
+            if self.store.exists("user_progress")
+            else {}
+        )
+        progress[f"{self.zone_name}_{self.difficulty}_current_level"] = new_level
+        self.store.put("user_progress", **progress)
         self.current_level = new_level
 
     def _update_rect(self, instance, value):
@@ -257,6 +279,20 @@ class LevelScreen(RelativeLayout):
             ).run()
         except Exception as e:
             print(f"Error in go_back: {e}")
+
+    def add_level_buttons(self):
+        grid_layout = GridLayout(cols=3, spacing=10, size_hint_y=None)
+        grid_layout.bind(minimum_height=grid_layout.setter("height"))
+        for i in range(1, 10):
+            level_image = self.get_level_image_path(i)
+            level_btn = ImageButton(
+                source=level_image,
+                size_hint=(None, None),
+                size=(Window.width * 0.25, Window.width * 0.25),
+            )
+            level_btn.bind(on_press=lambda x, level=i: self.on_level_select(level))
+            grid_layout.add_widget(level_btn)
+        return grid_layout
 
 
 class LevelScreenApp(App):
