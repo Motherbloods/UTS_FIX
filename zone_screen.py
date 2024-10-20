@@ -11,12 +11,15 @@ from config import Config
 from components.popup.settings_popup import SettingsManager
 from kivy.clock import Clock
 from main import MainApp
+from components.background import Background
+from utils.sound_manager import SoundManager
+from utils.keyboard_manager import KeyboardManager
 
 
 class MainWidget(RelativeLayout):
     def __init__(self, avatar_path, static_avatar_path, **kwargs):
         super(MainWidget, self).__init__(**kwargs)
-        print("Initializing MainWidget")
+        self.keyboard_manager = KeyboardManager(self)
         self.current_selection = 0
         self.max_selection = 2
         self.avatar_path = avatar_path
@@ -26,14 +29,8 @@ class MainWidget(RelativeLayout):
 
         Window.size = MainApp.get_window_size()
 
-        with self.canvas.before:
-            self.background = Rectangle(
-                source="./assets/bg.png",
-                pos=self.pos,
-                size=self.size,
-            )
-        self.bind(size=self._update_rect, pos=self._update_rect)
-
+        self.background = Background()
+        self.add_widget(self.background)
         self.animated_avatar = AnimatedImage(
             size_hint=(None, None),
             size=Config.get_avatar_size(500, 500),
@@ -89,9 +86,6 @@ class MainWidget(RelativeLayout):
             self.zone_buttons.append(button)
             self.add_widget(button)
 
-        self._keyboard = Window.request_keyboard(self._on_keyboard_closed, self)
-        self._keyboard.bind(on_key_down=self._on_key_down)
-
         self.update_selection()
 
         self.loading_animation = AnimatedImage(
@@ -107,7 +101,6 @@ class MainWidget(RelativeLayout):
         self.add_widget(self.loading_animation)
 
     def on_touch_down(self, touch):
-        print(f"Touch at {touch.pos}")
         for child in self.children:
             if child.collide_point(*touch.pos):
                 print(f"Touched {child}")
@@ -116,9 +109,7 @@ class MainWidget(RelativeLayout):
         return super(MainWidget, self).on_touch_down(touch)
 
     def on_zone_button_press(self, instance):
-        print(f"Zone button pressed: {instance.index}")
-        if self.arrow_sound:
-            self.arrow_sound.play()
+        SoundManager.play_arrow_sound()
         self.current_selection = instance.index
         self.update_selection()
         self.show_loading_animation()
@@ -138,35 +129,13 @@ class MainWidget(RelativeLayout):
             static_avatar_path=self.static_avatar_path,
         ).run()
 
-    def _update_rect(self, instance, value):
-        self.background.pos = instance.pos
-        self.background.size = instance.size
-
-    def _on_keyboard_closed(self):
-        self._keyboard.unbind(on_key_down=self._on_key_down)
-        self._keyboard = None
-
-    def _on_key_down(self, keyboard, keycode, text, modifiers):
-        if keycode[1] == "down":
-            self.move_selection_down()
-            return True
-        elif keycode[1] == "up":
-            self.move_selection_up()
-            return True
-        elif keycode[1] == "enter":
-            self.activate_current_selection()
-            return True
-        return False
-
     def move_selection_down(self):
-        if self.arrow_sound:
-            self.arrow_sound.play()
+        SoundManager.play_arrow_sound()
         self.current_selection = min(self.max_selection, self.current_selection + 1)
         self.update_selection()
 
     def move_selection_up(self):
-        if self.arrow_sound:
-            self.arrow_sound.play()
+        SoundManager.play_arrow_sound()
         self.current_selection = max(0, self.current_selection - 1)
         self.update_selection()
 
@@ -177,23 +146,19 @@ class MainWidget(RelativeLayout):
         self.show_loading_animation()
 
     def play_sound_and_go_back(self, instance):
-        try:
-            print("ini klikk")
-            if self.arrow_sound:
-                self.arrow_sound.play()
-            self.go_back(instance)
-        except Exception as e:
-            print(f"Error in play_sound_and_go_back: {e}")
+        SoundManager.play_arrow_sound()
+        self.go_back(instance)
 
     def go_back(self, instance):
-        try:
-            print("ini diklik")
-            App.get_running_app().stop()
-            from main import MainApp
+        App.get_running_app().stop()
+        from main import MainApp
 
-            MainApp().run()
-        except Exception as e:
-            print(f"Error in go_back: {e}")
+        MainApp().run()
+
+    def on_leave(self):
+        # Clean up keyboard resources
+        if hasattr(self, "keyboard_manager"):
+            self.keyboard_manager.release()
 
 
 class ModeApp(App):

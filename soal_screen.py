@@ -3,26 +3,23 @@ import os
 import time
 from kivy.app import App
 from kivy.uix.screenmanager import Screen
-from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
-from kivy.uix.button import Button
 from kivy.uix.image import Image
-from kivy.uix.label import Label
 from kivy.storage.jsonstore import JsonStore
 from kivy.uix.relativelayout import RelativeLayout
 from kivy.uix.gridlayout import GridLayout
-from kivy.graphics import Rectangle
-from kivy.uix.popup import Popup
 from kivy.core.text import LabelBase
 from kivy.resources import resource_add_path
-from kivy.clock import Clock
 from components.animated_widget import AnimatedImage
 from components.common_ui import ImageButton
 from components.popup.result_popup import ResultPopup
 from components.popup.show_result_finish_popup import ResultPopupFinish
 from config import Config
 from utils.game_utils import GameUtils
+from utils.user_data_utils import UserDataUtils
 from utils.constants import *
+from utils.sound_manager import SoundManager
+from components.background import Background
 
 resource_add_path("./assets/fonts/Bungee/")
 LabelBase.register(name="Bungee", fn_regular=FONTS_PATH)
@@ -40,14 +37,17 @@ class SoalScreen(Screen):
         self.current_question = 0
         self.score = 0
         self.level_score = 0
-        self.questions_data = self.load_questions()
+        self.questions_data = UserDataUtils.load_questions(
+            self.difficulty, self.zone, self.level
+        )
         self.questions = self.questions_data["questions"]
         self.popup = None
         self.user_score = GameUtils.get_user_score()
 
         self.main_layout = RelativeLayout()
 
-        self.background = GameUtils.setup_background(self.main_layout)
+        self.background = Background()
+        self.main_layout.add_widget(self.background)
         self.setup_ui()
 
     def setup_ui(self):
@@ -57,7 +57,7 @@ class SoalScreen(Screen):
             size=Config.get_button_back_size(),
             pos_hint={"center_x": 0.12, "center_y": 0.95},
         )
-        back_btn.bind(on_press=self.go_back)
+        back_btn.bind(on_press=self.play_sound_and_go_back)
         self.main_layout.add_widget(back_btn)
 
         title_image = Image(
@@ -67,6 +67,24 @@ class SoalScreen(Screen):
             pos_hint={"center_x": 0.5, "center_y": 0.95},
         )
         self.main_layout.add_widget(title_image)
+
+        hearts_layout = FloatLayout(
+            size_hint=(None, None),
+            size=(200, 50),
+            pos_hint={"center_x": 0.74, "center_y": 0.967},
+        )
+        for i in range(1, 6):
+            heart_image = Image(
+                source=f"./assets/heart{i}.png",
+                size_hint=(None, None),
+                size=(100, 100),
+                pos_hint={
+                    "center_x": 0.25 * i,
+                    "center_y": 0.2,
+                },
+            )
+            hearts_layout.add_widget(heart_image)
+        self.main_layout.add_widget(hearts_layout)
 
         self.soal_id_image = Image(
             size_hint=(None, None),
@@ -109,50 +127,16 @@ class SoalScreen(Screen):
         self.load_question()
 
     def load_user_score(self):
-        store = JsonStore("user_progress.json")
-        if store.exists("user_score"):
-            return store.get("user_score")["score"]
-        else:
-            store.put("user_score", score=0)
-            return 0
-
-    def save_user_score(self):
-        store = JsonStore("user_progress.json")
-        store.put("user_score", score=self.user_score)
+        return UserDataUtils.load_user_score()
 
     def load_questions(self):
-        file_path = f"./soal/{self.difficulty}/{self.zone}.json"
-        with open(file_path, "r") as file:
-            data = json.load(file)
-        return data[f"lessons_{self.zone}"][self.level - 1]
+        return UserDataUtils.load_questions(self.difficulty, self.zone, self.level)
 
     def load_question(self):
-        if self.current_question < len(self.questions):
-            self.question_start_time = time.time()
-            question = self.questions[self.current_question]
-            self.question_image.source = question["question"]
-            self.soal_id_image.source = question["soal_id"]
-            self.options_layout.clear_widgets()
-
-            base_path = f"./assets/soal/{self.difficulty}/{self.zone}/option/{self.level}/soal_{self.current_question + 1}/"
-
-            for i in range(1, 5):
-                option_path = os.path.join(base_path, f"{i}.png")
-                option_button = ImageButton(
-                    source=option_path,
-                    size_hint=(0.4, 0.5),
-                    allow_stretch=True,
-                    keep_ratio=True,
-                )
-                option_button.bind(
-                    on_press=lambda instance, i=i: self.check_answer(instance, i)
-                )
-                self.options_layout.add_widget(option_button)
-            self.animated_avatar.opacity = 0
-        else:
-            self.show_result()
+        return UserDataUtils.load_question(self)
 
     def check_answer(self, instance, option_number):
+        SoundManager.play_arrow_sound()
         self.animated_avatar.opacity = 1
         self.animated_avatar.pos_hint = AVATAR_POSITIONS[option_number]
         time_taken = time.time() - self.question_start_time
@@ -165,6 +149,7 @@ class SoalScreen(Screen):
                 if time_taken <= QUESTION_TIME_THRESHOLD
                 else SCORE_CORRECT
             )
+            self.score += 1
         else:
             score_increase = SCORE_INCORRECT
         self.level_score += score_increase
@@ -189,10 +174,12 @@ class SoalScreen(Screen):
         self.popup = popup
 
     def play_again(self, instance):
+        SoundManager.play_arrow_sound()
         self.load_question()
         self.dismiss_popup()
 
     def next_question(self, instance):
+        SoundManager.play_arrow_sound()
         self.current_question += 1
         if self.current_question < len(self.questions):
             self.load_question()
@@ -222,6 +209,7 @@ class SoalScreen(Screen):
         self.update_user_progress()
 
     def go_to_next_level(self, instance):
+        SoundManager.play_arrow_sound()
         self.dismiss_popup()
         next_level = self.level + 1
         App.get_running_app().stop()
@@ -236,6 +224,7 @@ class SoalScreen(Screen):
         return GameUtils.calculate_star_rating(self.score, len(self.questions))
 
     def restart_quiz(self, instance):
+        SoundManager.play_arrow_sound()
         self.dismiss_popup()
         self.current_question = 0
         self.score = 0
@@ -246,53 +235,22 @@ class SoalScreen(Screen):
         self.load_question()
 
     def update_user_progress(self):
-        store = JsonStore("user_progress.json")
-        current_progress = (
-            store.get("user_progress") if store.exists("user_progress") else {}
+        UserDataUtils.update_user_progress(
+            zone=self.zone,
+            difficulty=self.difficulty,
+            level=self.level,
+            score=self.score,
+            questions=self.questions,
+            calculate_star_rating_func=self.calculate_star_rating,
+            compare_star_ratings_func=self.compare_star_ratings,
         )
 
-        current_level_key = f"{self.zone}_{self.difficulty}_current_level"
-        level_scores_key = f"{self.zone}_{self.difficulty}_level_scores"
-
-        current_level = current_progress.get(current_level_key, 1)
-        level_scores = current_progress.get(level_scores_key, {})
-
-        star_rating = self.calculate_star_rating()
-
-        level_key = f"{self.zone}_{self.difficulty}_{self.level}"
-        existing_score = level_scores.get(level_key, {})
-        existing_star_rating = existing_score.get("star_rating", "0B")
-        if self.compare_star_ratings(star_rating, existing_star_rating) > 0:
-
-            level_scores[level_key] = {
-                "score": self.score,
-                "total_questions": len(self.questions),
-                "star_rating": star_rating,
-            }
-        else:
-
-            if level_key not in level_scores:
-
-                level_scores[level_key] = {
-                    "score": self.score,
-                    "total_questions": len(self.questions),
-                    "star_rating": star_rating,
-                }
-
-        if self.level == current_level and self.score > 0:
-            current_progress[current_level_key] = current_level + 1
-
-        current_progress[level_scores_key] = level_scores
-        store.put("user_progress", **current_progress)
-
     def compare_star_ratings(self, rating1, rating2):
+        return GameUtils.compare_star_ratings(rating1, rating2)
 
-        rating_order = ["0B", "1B", "1_5B", "2B", "2_5B", "3B"]
-        return rating_order.index(rating1) - rating_order.index(rating2)
-
-    def _update_rect(self, instance, value):
-        self.background.pos = instance.pos
-        self.background.size = instance.size
+    def play_sound_and_go_back(self, instance):
+        SoundManager.play_arrow_sound()
+        self.go_back(instance)
 
     def go_back(self, instance):
         App.get_running_app().stop()

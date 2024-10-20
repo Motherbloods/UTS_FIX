@@ -15,10 +15,12 @@ from kivy.storage.jsonstore import JsonStore
 from kivy.uix.popup import Popup
 from kivy.uix.label import Label
 from components.popup.locked_level_popup import LockedLevel
-from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.floatlayout import FloatLayout
 from soal_screen import SoalApp
 from utils.game_utils import GameUtils
 from utils.constants import *
+from utils.sound_manager import SoundManager
+from components.background import Background
 
 LabelBase.register(name="Bungee", fn_regular=FONTS_PATH)
 
@@ -41,7 +43,8 @@ class LevelScreen(RelativeLayout):
 
         Window.size = MainApp.get_window_size()
 
-        self.background = GameUtils.setup_background(self)
+        self.background = Background()
+        self.add_widget(self.background)
         self.setup_ui()
 
     def setup_ui(self):
@@ -100,82 +103,69 @@ class LevelScreen(RelativeLayout):
         scroll_view.add_widget(grid_layout)
 
     def add_trophy_and_stars(self):
-        icons_layout = BoxLayout(
-            orientation="horizontal",
+        icons_layout = FloatLayout(
             size_hint=(None, None),
-            size=(
-                Window.width * 0.6,
-                Window.height * 0.2,
-            ),  # Increased width to accommodate hearts
-            pos_hint={"center_x": 0.5, "center_y": 0.9},
-            spacing=20,
+            size=(Window.width * 0.6, Window.height * 0.2),
+            pos_hint={"center_x": 0.5, "center_y": 0.84},
         )
 
-        trophy_layout = BoxLayout(
-            orientation="vertical", size_hint=(None, None), spacing=0
-        )
         trophy_image = Image(
             source="./assets/piala.png",
             size_hint=(None, None),
             size=(40, 40),
-            pos_hint={"center_y": 1},
+            pos_hint={"center_x": 0.1, "center_y": 0.8},
         )
         user_score = 0
         if self.store.exists("user_score"):
             user_score = self.store.get("user_score")["score"]
+
         trophy_text = Label(
             text=str(user_score),
             size_hint=(None, None),
-            pos_hint={
-                "center_x": 0.2,
-                "center_y": 0,
-            },
+            pos_hint={"center_x": 0.1, "center_y": 0.6},
             color=CUSTOM_COLOR,
             font_name="Bungee",
-            font_size="20",
-        )
-        trophy_layout.add_widget(trophy_image)
-        trophy_layout.add_widget(trophy_text)
-
-        stars_layout = BoxLayout(
-            orientation="vertical",
-            size_hint=(None, None),
-            spacing=5,
+            font_size="20sp",
         )
 
         stars_image = Image(
-            source="./assets/stars.png", size_hint=(None, None), size=(40, 40)
+            source="./assets/stars.png",
+            size_hint=(None, None),
+            size=(40, 40),
+            pos_hint={"center_x": 0.37, "center_y": 0.8},
         )
 
         total_stars = self.calculate_total_stars()
         stars_text = Label(
-            text=f"{total_stars:.1f}",
+            text=f"{total_stars}/30",
             size_hint=(None, None),
+            pos_hint={"center_x": 0.37, "center_y": 0.6},
             color=CUSTOM_COLOR,
             font_name="Bungee",
-            font_size="16sp",
+            font_size="20sp",
         )
 
-        stars_layout.add_widget(stars_image)
-        stars_layout.add_widget(stars_text)
-
-        icons_layout.add_widget(trophy_layout)
-        icons_layout.add_widget(stars_layout)
-
-        # Add hearts
-        hearts_layout = BoxLayout(
-            orientation="horizontal",
+        hearts_layout = FloatLayout(
             size_hint=(None, None),
-            spacing=5,
+            size=(200, 50),
+            pos_hint={"center_x": 0.74, "center_y": 0.83},
         )
         for i in range(1, 6):
             heart_image = Image(
                 source=f"./assets/heart{i}.png",
                 size_hint=(None, None),
-                size=(30, 30),  # Adjust size as needed
+                size=(100, 100),
+                pos_hint={
+                    "center_x": 0.25 * i,
+                    "center_y": 0.2,
+                },
             )
             hearts_layout.add_widget(heart_image)
 
+        icons_layout.add_widget(trophy_image)
+        icons_layout.add_widget(trophy_text)
+        icons_layout.add_widget(stars_image)
+        icons_layout.add_widget(stars_text)
         icons_layout.add_widget(hearts_layout)
 
         self.add_widget(icons_layout)
@@ -185,55 +175,25 @@ class LevelScreen(RelativeLayout):
         return progress.get(f"{self.zone_name}_{self.difficulty}_level_scores", {})
 
     def get_level_image_path(self, level):
-        if level > self.current_level:
-            return "./assets/level/kunci.png"
-
-        level_key = f"{level}"
-        level_data = self.level_scores.get(level_key, {})
-        star_rating = level_data.get("star_rating", "0B")
-
-        if star_rating == "0B":
-            return f"./assets/level/0B/{level}.png"
-        elif star_rating == "1B":
-            return f"./assets/level/1B/{level}.png"
-        elif star_rating == "1_5B":
-            return f"./assets/level/1_5B/{level}.png"
-        elif star_rating == "2B":
-            return f"./assets/level/2B/{level}.png"
-        elif star_rating == "2_5B":
-            return f"./assets/level/2_5B/{level}.png"
-        elif star_rating == "3B":
-            return f"./assets/level/3B/{level}.png"
-        else:
-            return f"./assets/level/0B/{level}.png"
+        return GameUtils.get_level_image_path(
+            level, self.current_level, self.level_scores
+        )
 
     def calculate_total_stars(self):
-        total_stars = 0
-        for level_data in self.level_scores.values():
-            star_rating = level_data.get("star_rating", "0B")
-            if star_rating == "3B":
-                total_stars += 3
-            elif star_rating == "2_5B":
-                total_stars += 2.5
-            elif star_rating == "2B":
-                total_stars += 2
-            elif star_rating == "1_5B":
-                total_stars += 1.5
-            elif star_rating == "1B":
-                total_stars += 1
-        return total_stars
+        return GameUtils.calculate_total_stars(self.level_scores)
 
     def get_current_level(self):
         progress = GameUtils.get_user_progress()
         return progress.get(f"{self.zone_name}_{self.difficulty}_current_level", 1)
 
     def show_locked_popup(self):
+        SoundManager.play_arrow_sound()
         popup = LockedLevel(path="./assets/popup.png")
         popup.open()
 
     def on_level_select(self, level):
+        SoundManager.play_arrow_sound()
         if level <= self.current_level:
-            print(f"Level {level} selected")
             App.get_running_app().stop()
             SoalApp(
                 zone=self.zone_name,
@@ -242,7 +202,6 @@ class LevelScreen(RelativeLayout):
                 avatar_path=self.avatar_path,
             ).run()
         else:
-            print(f"Level {level} is locked")
             self.show_locked_popup()
 
     def update_current_level(self, new_level):
@@ -254,31 +213,6 @@ class LevelScreen(RelativeLayout):
         progress[f"{self.zone_name}_{self.difficulty}_current_level"] = new_level
         self.store.put("user_progress", **progress)
         self.current_level = new_level
-
-    def _update_rect(self, instance, value):
-        self.background.pos = instance.pos
-        self.background.size = instance.size
-
-    def play_sound_and_go_back(self, instance):
-        try:
-            print("ini klikk")
-            if self.arrow_sound:
-                self.arrow_sound.play()
-            self.go_back(instance)
-        except Exception as e:
-            print(f"Error in play_sound_and_go_back: {e}")
-
-    def go_back(self, instance):
-        try:
-            print("ini diklik")
-            App.get_running_app().stop()
-            from zone_screen import ModeApp
-
-            ModeApp(
-                avatar_path=self.avatar_path, static_avatar_path=self.static_avatar_path
-            ).run()
-        except Exception as e:
-            print(f"Error in go_back: {e}")
 
     def add_level_buttons(self):
         grid_layout = GridLayout(cols=3, spacing=10, size_hint_y=None)
@@ -293,6 +227,18 @@ class LevelScreen(RelativeLayout):
             level_btn.bind(on_press=lambda x, level=i: self.on_level_select(level))
             grid_layout.add_widget(level_btn)
         return grid_layout
+
+    def play_sound_and_go_back(self, instance):
+        SoundManager.play_arrow_sound()
+        self.go_back(instance)
+
+    def go_back(self, instance):
+        App.get_running_app().stop()
+        from zone_screen import ModeApp
+
+        ModeApp(
+            avatar_path=self.avatar_path, static_avatar_path=self.static_avatar_path
+        ).run()
 
 
 class LevelScreenApp(App):
