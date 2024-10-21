@@ -6,7 +6,6 @@ from kivy.core.audio import SoundLoader
 from kivy.uix.floatlayout import FloatLayout
 from main import MainApp
 from kivy.uix.progressbar import ProgressBar
-from kivy.uix.boxlayout import BoxLayout
 from components.animated_widget import AnimatedImage
 import math
 

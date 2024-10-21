@@ -2,17 +2,14 @@ from kivy.app import App
 from kivy.uix.relativelayout import RelativeLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.core.window import Window
-from kivy.graphics import Rectangle
 from components.common_ui import ImageButton
 from config import Config
 from kivy.uix.scrollview import ScrollView
 from main import MainApp
 from kivy.core.text import LabelBase
-from kivy.utils import get_color_from_hex
 from kivy.uix.image import Image
 from kivy.core.audio import SoundLoader
 from kivy.storage.jsonstore import JsonStore
-from kivy.uix.popup import Popup
 from kivy.uix.label import Label
 from components.popup.locked_level_popup import LockedLevel
 from kivy.uix.floatlayout import FloatLayout
@@ -20,7 +17,8 @@ from soal_screen import SoalApp
 from utils.game_utils import GameUtils
 from utils.constants import *
 from utils.sound_manager import SoundManager
-from components.background import Background
+from utils.user_data_utils import UserDataUtils
+from components.ui.background import Background
 
 LabelBase.register(name="Bungee", fn_regular=FONTS_PATH)
 
@@ -35,6 +33,7 @@ class LevelScreen(RelativeLayout):
         self.difficulty = difficulty
         self.avatar_path = avatar_path
         self.static_avatar_path = static_avatar_path
+        self.remaining_hearts = UserDataUtils.get_remaining_hearts() or 5
         self.arrow_sound = SoundLoader.load("./assets/arrow_music.mp3")
 
         self.store = JsonStore("user_progress.json")
@@ -150,7 +149,7 @@ class LevelScreen(RelativeLayout):
             size=(200, 50),
             pos_hint={"center_x": 0.74, "center_y": 0.83},
         )
-        for i in range(1, 6):
+        for i in range(1, self.remaining_hearts + 1):
             heart_image = Image(
                 source=f"./assets/heart{i}.png",
                 size_hint=(None, None),

@@ -4,7 +4,7 @@ from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.uix.image import Image
 from kivy.clock import Clock
-from components.spinner_widget import SpinnerLabel
+from components.ui.spinner_widget import SpinnerLabel
 from kivy.core.text import LabelBase
 from kivy.resources import resource_add_path
 from components.common_ui import ImageButton

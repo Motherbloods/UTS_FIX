@@ -3,8 +3,7 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.image import Image
 from kivy.uix.label import Label
-from kivy.uix.button import Button
-from components.common_ui import ImageButton, ClickableImage, LabeledAvatar
+from components.common_ui import LabeledAvatar
 from kivy.core.text import LabelBase
 from kivy.utils import get_color_from_hex
 from components.animated_widget import AnimatedImage

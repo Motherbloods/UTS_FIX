@@ -111,3 +111,17 @@ class UserDataUtils:
             screen_instance.animated_avatar.opacity = 0
         else:
             screen_instance.show_result()
+
+    @staticmethod
+    def get_remaining_hearts():
+        store = JsonStore("user_progress.json")
+        if store.exists("hearts"):
+            return store.get("hearts")["value"]
+        else:
+            # Default value if not set
+            return 5
+
+    @staticmethod
+    def save_remaining_hearts(hearts):
+        store = JsonStore("user_progress.json")
+        store.put("hearts", value=hearts)

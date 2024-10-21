@@ -1,20 +1,16 @@
 from kivy.app import App
-from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.relativelayout import RelativeLayout
-from kivy.uix.image import Image
 from kivy.core.window import Window
-from kivy.graphics import Rectangle
-from kivy.clock import Clock
 from utils.sound_manager import SoundManager
 from components.animated_widget import AnimatedImage
-from components.common_ui import ImageButton, ClickableImage
+from components.common_ui import ClickableImage
 from components.popup.avatar_popup import AvatarPopup
 from components.popup.settings_popup import SettingsPopup
 from utils.keyboard_manager import KeyboardManager
-from components.background import Background
-from components.title_image import TitleImage
-from components.button_layout import ButtonLayout
-from components.settings_widget import SettingsIcon
+from components.ui.background import Background
+from components.ui.title_image import TitleImage
+from components.ui.button_layout import ButtonLayout
+from components.ui.settings_widget import SettingsIcon
 from config import Config
 from kivy.metrics import Metrics
 

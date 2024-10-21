@@ -1,15 +1,13 @@
-import json
-import os
 import time
 from kivy.app import App
 from kivy.uix.screenmanager import Screen
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.image import Image
-from kivy.storage.jsonstore import JsonStore
 from kivy.uix.relativelayout import RelativeLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.core.text import LabelBase
 from kivy.resources import resource_add_path
+from kivy.clock import Clock
 from components.animated_widget import AnimatedImage
 from components.common_ui import ImageButton
 from components.popup.result_popup import ResultPopup
@@ -19,7 +17,7 @@ from utils.game_utils import GameUtils
 from utils.user_data_utils import UserDataUtils
 from utils.constants import *
 from utils.sound_manager import SoundManager
-from components.background import Background
+from components.ui.background import Background
 
 resource_add_path("./assets/fonts/Bungee/")
 LabelBase.register(name="Bungee", fn_regular=FONTS_PATH)
@@ -28,6 +26,7 @@ LabelBase.register(name="Bungee", fn_regular=FONTS_PATH)
 class SoalScreen(Screen):
     def __init__(self, zone, difficulty, level, avatar_path, **kwargs):
         super(SoalScreen, self).__init__(**kwargs)
+        self.result_shown = False
         self.question_start_time = None
         self.time_threshold = 10
         self.zone = zone
@@ -37,6 +36,11 @@ class SoalScreen(Screen):
         self.current_question = 0
         self.score = 0
         self.level_score = 0
+        self.wrong_answers = 0
+        self.empty_heart_image = "./assets/kosong.png"
+        self.remaining_hearts = UserDataUtils.get_remaining_hearts() or 5
+        self.hearts = []
+        self.heart_positions = []
         self.questions_data = UserDataUtils.load_questions(
             self.difficulty, self.zone, self.level
         )
@@ -48,9 +52,18 @@ class SoalScreen(Screen):
 
         self.background = Background()
         self.main_layout.add_widget(self.background)
+
         self.setup_ui()
 
     def setup_ui(self):
+        hearts_x_positions = [
+            0.25,
+            0.5,
+            0.75,
+            1,
+            1.25,
+        ]
+        hearts_y_position = 0.2
         back_btn = ImageButton(
             source="./assets/backk.png",
             size_hint=(None, None),
@@ -68,23 +81,51 @@ class SoalScreen(Screen):
         )
         self.main_layout.add_widget(title_image)
 
-        hearts_layout = FloatLayout(
+        self.hearts_layout = FloatLayout(
             size_hint=(None, None),
             size=(200, 50),
             pos_hint={"center_x": 0.74, "center_y": 0.967},
         )
-        for i in range(1, 6):
-            heart_image = Image(
-                source=f"./assets/heart{i}.png",
-                size_hint=(None, None),
-                size=(100, 100),
-                pos_hint={
-                    "center_x": 0.25 * i,
-                    "center_y": 0.2,
-                },
+        for i in range(1, 5 + 1):
+            if i <= self.remaining_hearts:
+                heart_image = Image(
+                    source=f"./assets/heart{i}.png",
+                    size_hint=(None, None),
+                    size=(100, 100),
+                    pos_hint={
+                        "center_x": 0.25 * i,
+                        "center_y": hearts_y_position,
+                    },
+                )
+            else:
+                heart_image = Image(
+                    source="./assets/kosong.png",
+                    size_hint=(None, None),
+                    size=(100, 100),
+                    pos_hint={
+                        "center_x": 0.25 * i,
+                        "center_y": hearts_y_position,
+                    },
+                )
+
+            self.hearts.append(heart_image)
+            self.heart_positions.append(
+                {"center_x": 0.2 * i, "center_y": hearts_y_position}
             )
-            hearts_layout.add_widget(heart_image)
-        self.main_layout.add_widget(hearts_layout)
+            self.hearts_layout.add_widget(heart_image)
+
+        self.animated_heart = AnimatedImage(
+            base_path="./assets/avatar/gif/heart/frame_",
+            frame_count=91,
+            fps=30,
+            size_hint=(None, None),
+            image_size=(None, None),
+            size=(100, 100),
+        )
+        self.animated_heart.opacity = 0
+
+        self.main_layout.add_widget(self.hearts_layout)
+        self.main_layout.add_widget(self.animated_heart)
 
         self.soal_id_image = Image(
             size_hint=(None, None),
@@ -143,6 +184,11 @@ class SoalScreen(Screen):
         correct_answer = self.questions[self.current_question]["answer"]
 
         is_correct = instance.source == correct_answer
+        if not is_correct:
+            self.handle_wrong_answer()
+            if self.remaining_hearts <= 0:
+                return
+
         if is_correct:
             score_increase = (
                 SCORE_FAST_CORRECT
@@ -152,14 +198,16 @@ class SoalScreen(Screen):
             self.score += 1
         else:
             score_increase = SCORE_INCORRECT
+
         self.level_score += score_increase
         self.user_score += score_increase
         GameUtils.save_user_score(self.user_score)
 
-        if self.current_question == len(self.questions) - 1:
-            self.show_result()
-        else:
-            self.show_answer_popup(is_correct, score_increase, time_taken)
+        if self.remaining_hearts > 0:
+            if self.current_question == len(self.questions) - 1:
+                self.show_result()
+            else:
+                self.show_answer_popup(is_correct, score_increase, time_taken)
 
     def show_answer_popup(self, is_correct, score_increase, time_taken):
         popup = ResultPopup(
@@ -193,6 +241,9 @@ class SoalScreen(Screen):
             self.popup = None
 
     def show_result(self):
+        if self.result_shown:
+            return
+        self.result_shown = True
         total_score = self.score
         star_rating = self.calculate_star_rating()
 
@@ -208,8 +259,43 @@ class SoalScreen(Screen):
 
         self.update_user_progress()
 
+    def handle_wrong_answer(self):
+        self.wrong_answers += 1
+        print(f"ini self worng {self.wrong_answers}")
+
+        if self.wrong_answers == 3:
+            hearts_x_positions = [0.668, 0.741, 0.814, 0.887, 0.96]
+            self.remaining_hearts -= 1
+
+            self.animated_heart.pos_hint = {
+                "center_x": hearts_x_positions[self.remaining_hearts],
+                "center_y": 0.955,
+            }
+            self.animated_heart.opacity = 1
+            self.animated_heart.update_animation("./assets/avatar/gif/heart/frame_", 91)
+            self.hearts[self.remaining_hearts].opacity = 0
+            Clock.schedule_once(self.hide_animated_heart, 1)
+
+            self.wrong_answers = 0
+            Clock.schedule_once(self.reset_hearts, 1.5)
+        if self.remaining_hearts <= 0:
+            self.show_result()
+
+    def reset_hearts(self, dt):
+        for i in range(self.remaining_hearts):
+            self.hearts[i].source = f"./assets/heart{i+1}.png"
+
+    def hide_animated_heart(self, dt):
+        self.animated_heart.opacity = 0
+        Clock.schedule_once(self.show_empty_heart, 0.1)
+
+    def show_empty_heart(self, dt):
+        self.hearts[self.remaining_hearts].opacity = 1
+        self.hearts[self.remaining_hearts].source = self.empty_heart_image
+
     def go_to_next_level(self, instance):
         SoundManager.play_arrow_sound()
+        UserDataUtils.save_remaining_hearts(self.remaining_hearts)
         self.dismiss_popup()
         next_level = self.level + 1
         App.get_running_app().stop()
@@ -229,6 +315,8 @@ class SoalScreen(Screen):
         self.current_question = 0
         self.score = 0
         self.level_score = 0
+        self.wrong_answers = 0
+        self.result_shown = False
         self.content_layout.clear_widgets()
         self.content_layout.add_widget(self.question_image)
         self.content_layout.add_widget(self.options_layout)
@@ -253,6 +341,8 @@ class SoalScreen(Screen):
         self.go_back(instance)
 
     def go_back(self, instance):
+        self.wrong_answers = 0
+        UserDataUtils.save_remaining_hearts(self.remaining_hearts)
         App.get_running_app().stop()
         from level_screen import LevelScreenApp
 

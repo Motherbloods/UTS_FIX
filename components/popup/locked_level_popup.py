@@ -1,9 +1,5 @@
 from kivy.uix.popup import Popup
 from kivy.uix.floatlayout import FloatLayout
-from kivy.uix.label import Label
-from kivy.uix.image import Image
-from kivy.uix.button import Button
-from kivy.uix.boxlayout import BoxLayout
 from components.common_ui import ClickableImage
 from utils.sound_manager import SoundManager
 

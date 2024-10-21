@@ -8,7 +8,7 @@ from kivy.animation import Animation
 from components.common_ui import ImageButton
 from components.animated_widget import AnimatedImage
 from config import Config
-from components.spinner_widget import SpinnerLabel
+from components.ui.spinner_widget import SpinnerLabel
 from utils.sound_manager import SoundManager
 
 

@@ -11,7 +11,7 @@ from config import Config
 from components.popup.settings_popup import SettingsManager
 from kivy.clock import Clock
 from main import MainApp
-from components.background import Background
+from components.ui.background import Background
 from utils.sound_manager import SoundManager
 from utils.keyboard_manager import KeyboardManager
 
