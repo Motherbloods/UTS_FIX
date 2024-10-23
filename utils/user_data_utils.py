@@ -3,9 +3,19 @@ import os
 import time
 from components.common_ui import ImageButton
 from kivy.storage.jsonstore import JsonStore
+from utils.constants import *
 
 
 class UserDataUtils:
+    AVATAR_UNLOCK_REQUIREMENTS = {
+        "Bee": {"difficulty": "mudah", "class": 1},
+        "Knight": {"difficulty": "mudah", "class": 2},
+        "Rogue": {"difficulty": "mudah", "class": 3},
+        "Punk": {"difficulty": "sedang", "class": 2},
+        "Roger": {"difficulty": "sedang", "class": 3},
+        "Wizard": {"difficulty": "all", "class": "all"},
+    }
+
     @staticmethod
     def load_user_score():
         store = JsonStore("user_progress.json")
@@ -116,12 +126,147 @@ class UserDataUtils:
     def get_remaining_hearts():
         store = JsonStore("user_progress.json")
         if store.exists("hearts"):
-            return store.get("hearts")["value"]
+            hearts = store.get("hearts")["value"]
+            return hearts if hearts is not None else 5
         else:
-            # Default value if not set
             return 5
 
     @staticmethod
     def save_remaining_hearts(hearts):
         store = JsonStore("user_progress.json")
         store.put("hearts", value=hearts)
+
+    @staticmethod
+    def get_last_heart_regen_time():
+        store = JsonStore("user_progress.json")
+        if store.exists("last_heart_regen"):
+            return store.get("last_heart_regen")["timestamp"]
+        else:
+            current_time = time.time()
+            store.put("last_heart_regen", timestamp=current_time)
+            return current_time
+
+    @staticmethod
+    def save_last_heart_regen_time(timestamp):
+        store = JsonStore("user_progress.json")
+        store.put("last_heart_regen", timestamp=timestamp)
+
+    @staticmethod
+    def load_user_progress():
+        store = JsonStore("user_progress.json")
+        if store.exists("user_progress"):
+            return store.get("user_progress")
+        return {}
+
+    @staticmethod
+    def check_zone_completion(progress, zone, difficulty):
+        zone_scores = progress.get(f"{zone}_{difficulty}_level_scores", {})
+
+        if not zone_scores:
+            return False
+        total_levels = 9
+        completed_levels = 1
+
+        for level in range(1, total_levels + 1):
+            level_key = f"{zone}_{difficulty}_{level}"
+            if level_key in zone_scores:
+                level_data = zone_scores[level_key]
+                if level_data.get("score", 0) > 0:
+                    completed_levels += 1
+        print(total_levels, completed_levels)
+        return completed_levels == total_levels
+
+    @staticmethod
+    def check_unlocked_avatars():
+        progress = UserDataUtils.load_user_progress()
+
+        unlocked_avatars = list(AVATAR_OPTIONS.items())
+
+        for avatar_data in LOCKED_AVATARS[
+            :
+        ]:  # Use slice copy to safely modify during iteration
+            static_path, name, hover_path, gif_path = avatar_data
+            avatar_key = name.lower()
+            should_unlock = False
+
+            # Check unlock conditions for each avatar
+            if avatar_key == "bee":
+                should_unlock = UserDataUtils.check_zone_completion(
+                    progress, "kelas_1", "mudah"
+                )
+
+            elif avatar_key == "knight":
+                should_unlock = UserDataUtils.check_zone_completion(
+                    progress, "kelas_2", "mudah"
+                )
+
+            elif avatar_key == "rogue":
+                should_unlock = UserDataUtils.check_zone_completion(
+                    progress, "kelas_3", "mudah"
+                )
+
+            elif avatar_key == "punk":
+                should_unlock = UserDataUtils.check_zone_completion(
+                    progress, "kelas_2", "sedang"
+                )
+
+            elif avatar_key == "roger":
+                should_unlock = UserDataUtils.check_zone_completion(
+                    progress, "kelas_3", "sedang"
+                )
+
+            elif avatar_key == "wizard":
+                should_unlock = True
+                # Check all zones and difficulties
+                for zone in ["kelas_1", "kelas_2", "kelas_3"]:
+                    for difficulty in ["mudah", "sedang", "sulit"]:
+                        if not UserDataUtils.check_zone_completion(
+                            progress, zone, difficulty
+                        ):
+                            should_unlock = False
+                            break
+                    if not should_unlock:
+                        break
+
+            if should_unlock:
+                # Convert locked avatar to unlocked format
+                new_avatar = (static_path.replace("/lock/", "/"), name), gif_path
+
+                if new_avatar not in unlocked_avatars:
+                    unlocked_avatars.append(new_avatar)
+                    LOCKED_AVATARS.remove(avatar_data)
+
+        AVATAR_OPTIONS.clear()
+        AVATAR_OPTIONS.update(dict(unlocked_avatars))
+
+    @staticmethod
+    def check_newly_unlocked_avatar(progress, zone, level):
+        # Extract the class number from zone (e.g., "kelas_1" -> 1)
+        current_class = int(zone.split("_")[1]) if "_" in zone else None
+
+        for (
+            avatar_name,
+            requirements,
+        ) in UserDataUtils.AVATAR_UNLOCK_REQUIREMENTS.items():
+            print(requirements["class"], avatar_name, current_class)
+            if requirements["class"] == "all" and zone == "kelas_3":
+                all_completed = True
+                for z in ["kelas_1", "kelas_2", "kelas_3"]:
+                    for d in ["mudah", "sedang", "sulit"]:
+                        if not UserDataUtils.check_zone_completion(progress, z, d):
+                            all_completed = False
+                            break
+                if all_completed:
+                    return avatar_name
+
+            elif requirements["class"] == current_class:
+                print("ini di eliff")
+                if requirements["difficulty"] == "mudah":
+                    print("ini di mudah difuflu")
+                    if UserDataUtils.check_zone_completion(progress, zone, "mudah"):
+                        print(f"ini avatar name{avatar_name}")
+                        return avatar_name
+                elif requirements["difficulty"] == "sedang":
+                    if UserDataUtils.check_zone_completion(progress, zone, "sedang"):
+                        return avatar_name
+        return None

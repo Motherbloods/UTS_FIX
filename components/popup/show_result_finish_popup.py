@@ -10,6 +10,7 @@ from components.animated_widget import AnimatedImage
 from config import Config
 from components.ui.spinner_widget import SpinnerLabel
 from utils.sound_manager import SoundManager
+from utils.user_data_utils import UserDataUtils
 
 
 class ResultPopupFinish(Popup):
@@ -18,10 +19,12 @@ class ResultPopupFinish(Popup):
         total_score,
         star_rating,
         level,
+        zone,
         level_score,
         on_play_again,
         on_next_level,
-        **kwargs
+        on_menu_level,
+        **kwargs,
     ):
         super(ResultPopupFinish, self).__init__(**kwargs)
         self.title = " "
@@ -33,16 +36,54 @@ class ResultPopupFinish(Popup):
 
         self.content = FloatLayout()
 
-        image_source = (
-            "./assets/sempurna.png" if star_rating == "3B" else "./assets/salah_2.png"
+        # Check if any avatar was unlocked
+        progress = UserDataUtils.load_user_progress()
+        unlocked_avatar = UserDataUtils.check_newly_unlocked_avatar(
+            progress, zone, level
         )
+        if unlocked_avatar:
+            # Show unlocked avatar image
+            avatar_image = Image(
+                source=f"./assets/avatar/png/{unlocked_avatar.lower()}.png",
+                size_hint=(None, None),
+                size=(200, 200),
+                pos_hint={"center_x": 0.5, "center_y": 0.95},
+            )
+            self.content.add_widget(avatar_image)
 
-        new_image = Image(
-            source=image_source,
-            size_hint=(None, None),
-            size=(280, 260),
-            pos_hint={"center_x": 0.5, "center_y": 0.85},
-        )
+            print(f"ni level {level}")
+            if level == 9:
+                SoundManager.play_sound("./assets/aplause.mp3")
+                image_source = f"./assets/{zone}_done.png"
+            else:
+                if star_rating == "3B":
+                    image_source = "./assets/sempurna.png"
+                else:
+                    image_source = "./assets/salah_2.png"
+            new_image = Image(
+                source=image_source,
+                size_hint=(None, None),
+                size=(280, 260),
+                pos_hint={"center_x": 0.5, "center_y": 0.75},
+            )
+        else:
+            print(f"ni level {level}")
+            if level == 9:
+                SoundManager.play_sound("./assets/aplause.mp3")
+                image_source = f"./assets/{zone}_done.png"
+            else:
+                if star_rating == "3B":
+                    image_source = "./assets/sempurna.png"
+                else:
+                    image_source = "./assets/salah_2.png"
+
+            new_image = Image(
+                source=image_source,
+                size_hint=(None, None),
+                size=(280, 260),
+                pos_hint={"center_x": 0.5, "center_y": 0.85},
+            )
+
         self.content.add_widget(new_image)
 
         trophy = Image(
@@ -63,29 +104,48 @@ class ResultPopupFinish(Popup):
         self.content.add_widget(self.spinner)
 
         self.add_star_rating(star_rating)
-
         button_layout = FloatLayout(
             size_hint=(None, None),
             size=(200, 50),
             pos_hint={"center_x": 0.5, "center_y": 0.2},
         )
-        play_again_btn = ImageButton(
-            source="./assets/main_lagi.png",
-            size_hint=(None, None),
-            size=Config.get_button_back_size(),
-            pos_hint={"center_x": 0, "y": 0},
-        )
-        next_btn = ImageButton(
-            source="./assets/next_level.png",
-            size_hint=(None, None),
-            size=Config.get_button_back_size(),
-            pos_hint={"center_x": 1, "y": 0},
-        )
-        play_again_btn.bind(on_release=on_play_again)
-        next_btn.bind(on_release=on_next_level)
+        if star_rating is not "0B":
+            if level == 9:
+                menu_btn = ImageButton(
+                    source="./assets/menu_level.png",
+                    size_hint=(None, None),
+                    size=Config.get_button_back_size(120, 120),
+                    pos_hint={"center_x": 0.5, "y": 0},
+                )
+                menu_btn.bind(on_release=on_menu_level)
+                button_layout.add_widget(menu_btn)
+            else:
+                play_again_btn = ImageButton(
+                    source="./assets/main_lagi.png",
+                    size_hint=(None, None),
+                    size=Config.get_button_back_size(80, 80),
+                    pos_hint={"center_x": 0, "y": 0},
+                )
+                next_btn = ImageButton(
+                    source="./assets/next_level.png",
+                    size_hint=(None, None),
+                    size=Config.get_button_back_size(80, 80),
+                    pos_hint={"center_x": 1, "y": 0},
+                )
+                play_again_btn.bind(on_release=on_play_again)
+                next_btn.bind(on_release=on_next_level)
 
-        button_layout.add_widget(play_again_btn)
-        button_layout.add_widget(next_btn)
+                button_layout.add_widget(play_again_btn)
+                button_layout.add_widget(next_btn)
+        else:
+            play_again_btn = ImageButton(
+                source="./assets/main_lagi.png",
+                size_hint=(None, None),
+                size=Config.get_button_back_size(80, 80),
+                pos_hint={"center_x": 0.5, "y": 0},
+            )
+            play_again_btn.bind(on_release=on_play_again)
+            button_layout.add_widget(play_again_btn)
         self.content.add_widget(button_layout)
 
         self.overlay = FloatLayout()
@@ -130,11 +190,7 @@ class ResultPopupFinish(Popup):
         )
 
         x_offset = [0, 1, 2]
-        y_offset = [
-            0.4,
-            0.8,
-            0.4,
-        ]
+        y_offset = [0.4, 0.8, 0.4]
 
         for i, source in enumerate(star_images):
             star = Image(
@@ -161,7 +217,7 @@ class ResultPopupFinish(Popup):
 
     def show_animated_overlay(self, dt):
         Window.add_widget(self.overlay)
-        Clock.schedule_once(self.remove_animated_overlay, 7)
+        Clock.schedule_once(self.remove_animated_overlay, 3)
 
     def remove_animated_overlay(self, dt):
         Window.remove_widget(self.overlay)

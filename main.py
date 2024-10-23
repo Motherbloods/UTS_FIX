@@ -11,6 +11,7 @@ from components.ui.background import Background
 from components.ui.title_image import TitleImage
 from components.ui.button_layout import ButtonLayout
 from components.ui.settings_widget import SettingsIcon
+from utils.user_data_utils import UserDataUtils
 from config import Config
 from kivy.metrics import Metrics
 
@@ -24,7 +25,7 @@ class MainApp(App):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.current_avatar_path = "./assets/avatar/gif/ninja/ninja-"
+        self.current_avatar_path = "./assets/avatar/gif/male/male-"
         self.current_static_avatar = "./assets/avatar/png/ninja.png"
         self.avatar_popup = None
         self.settings_popup = None
@@ -35,6 +36,7 @@ class MainApp(App):
 
         SoundManager.initialize_bgm()
         SoundManager.initialize_arrow_sound()
+        UserDataUtils.check_unlocked_avatars()
         self.original_size = Window.size
         self.original_dpi = Metrics.dpi
 
@@ -143,8 +145,10 @@ class MainApp(App):
         self.static_avatar.update_source(static_path)
         self.current_static_avatar = static_path
         self.current_avatar_path = animated_base_path
+        self.static_avatar.update_source(static_path)
         self.animated_avatar.update_animation(animated_base_path, 6)
         if self.avatar_popup:
+            self.avatar_popup.current_avatar = static_path
             self.avatar_popup.dismiss()
         if self.settings_popup:
             self.settings_popup.current_avatar_path = animated_base_path

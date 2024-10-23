@@ -26,3 +26,66 @@ QUESTION_TIME_THRESHOLD = 10
 SCORE_FAST_CORRECT = 500
 SCORE_CORRECT = 250
 SCORE_INCORRECT = -100
+
+AVATAR_OPTIONS = {
+    (
+        "./assets/avatar/png/male.png",
+        "Veldora",
+    ): "./assets/avatar/gif/male/male-",
+    (
+        "./assets/avatar/png/female.png",
+        "Asismant",
+    ): "./assets/avatar/gif/female/female-",
+    (
+        "./assets/avatar/png/ninja.png",
+        "Tuple",
+    ): "./assets/avatar/gif/ninja/ninja-",
+}
+
+LOCKED_AVATARS = [
+    (
+        "./assets/avatar/png/lock/bee.png",
+        "Bee",
+        "./assets/avatar/png/hover/bee.png",
+        "./assets/avatar/gif/bee/bee-",
+    ),
+    (
+        "./assets/avatar/png/lock/knight.png",
+        "Knight",
+        "./assets/avatar/png/hover/knight.png",
+        "./assets/avatar/gif/knight/knight-",
+    ),
+    (
+        "./assets/avatar/png/lock/rogue.png",
+        "Rogue",
+        "./assets/avatar/png/hover/rogue.png",
+        "./assets/avatar/gif/rogue/rogue-",
+    ),
+    (
+        "./assets/avatar/png/lock/punk.png",
+        "Punk",
+        "./assets/avatar/png/hover/punk.png",
+        "./assets/avatar/gif/punk/punk-",
+    ),
+    (
+        "./assets/avatar/png/lock/roger.png",
+        "Roger",
+        "./assets/avatar/png/hover/roger.png",
+        "./assets/avatar/gif/roger/roger-",
+    ),
+    (
+        "./assets/avatar/png/lock/wizard.png",
+        "Wizard",
+        "./assets/avatar/png/hover/wizard.png",
+        "./assets/avatar/gif/wizard/wizard-",
+    ),
+]
+
+AVATAR_UNLOCK_REQUIREMENTS = {
+    "bee": {"difficulty": "mudah", "class": 1, "all_levels": True},
+    "knight": {"difficulty": "mudah", "class": 2, "all_levels": True},
+    "rogue": {"difficulty": "mudah", "class": 3, "all_levels": True},
+    "punk": {"difficulty": "sedang", "class": 2, "all_levels": True},
+    "roger": {"difficulty": "sedang", "class": 3, "all_levels": True},
+    "wizard": {"difficulty": "all", "class": "all", "all_levels": True},
+}

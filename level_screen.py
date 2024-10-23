@@ -12,6 +12,7 @@ from kivy.core.audio import SoundLoader
 from kivy.storage.jsonstore import JsonStore
 from kivy.uix.label import Label
 from components.popup.locked_level_popup import LockedLevel
+from components.popup.hearts_empty_popup import HeartsEmptyPopup
 from kivy.uix.floatlayout import FloatLayout
 from soal_screen import SoalApp
 from utils.game_utils import GameUtils
@@ -19,6 +20,7 @@ from utils.constants import *
 from utils.sound_manager import SoundManager
 from utils.user_data_utils import UserDataUtils
 from components.ui.background import Background
+from components.animated_widget import AnimatedImage
 
 LabelBase.register(name="Bungee", fn_regular=FONTS_PATH)
 
@@ -33,7 +35,7 @@ class LevelScreen(RelativeLayout):
         self.difficulty = difficulty
         self.avatar_path = avatar_path
         self.static_avatar_path = static_avatar_path
-        self.remaining_hearts = UserDataUtils.get_remaining_hearts() or 5
+        self.remaining_hearts = UserDataUtils.get_remaining_hearts()
         self.arrow_sound = SoundLoader.load("./assets/arrow_music.mp3")
 
         self.store = JsonStore("user_progress.json")
@@ -50,15 +52,13 @@ class LevelScreen(RelativeLayout):
         back_btn = ImageButton(
             source="./assets/backk.png",
             size_hint=(None, None),
-            size=Config.get_button_back_size(),
+            size=Config.get_button_back_size(80, 80),
             pos_hint={"center_x": 0.1, "top": 0.965},
         )
         back_btn.bind(on_press=self.play_sound_and_go_back)
         self.add_widget(back_btn)
 
-        title_image_path = (
-            f"./assets/level/title/{self.zone_name}/{self.difficulty}.png"
-        )
+        title_image_path = f"./assets/level/title/{self.zone_name}.png"
         title_image = Image(
             source=title_image_path,
             size_hint=(None, None),
@@ -79,9 +79,22 @@ class LevelScreen(RelativeLayout):
         grid_layout = GridLayout(cols=3, spacing=10, size_hint_y=None)
         grid_layout.bind(minimum_height=grid_layout.setter("height"))
         for i in range(1, 10):
-
             if i > self.current_level:
-                level_image = "./assets/level/kunci.png"
+                print(f"ini kepanggil {i}")
+                animated_button = AnimatedImage(
+                    base_path="./gif4/frame_",
+                    frame_count=100,
+                    fps=20,
+                    loop_reverse=True,
+                    size_hint=(None, None),
+                    size=(Window.width * 0.25, Window.width * 0.25),
+                    use_interval=True,  # Enable interval-based animation
+                    interval_duration=7,
+                )
+                animated_button.bind(
+                    on_press=lambda x, level=i: self.on_level_select(level)
+                )
+                grid_layout.add_widget(animated_button)
             else:
                 level_key = f"{self.zone_name}_{self.difficulty}_{i}"
                 level_data = self.level_scores.get(level_key, {})
@@ -91,13 +104,13 @@ class LevelScreen(RelativeLayout):
                 else:
                     level_image = f"./assets/level/{star_rating}/{i}.png"
 
-            level_btn = ImageButton(
-                source=level_image,
-                size_hint=(None, None),
-                size=(Window.width * 0.25, Window.width * 0.25),
-            )
-            level_btn.bind(on_press=lambda x, level=i: self.on_level_select(level))
-            grid_layout.add_widget(level_btn)
+                level_btn = ImageButton(
+                    source=level_image,
+                    size_hint=(None, None),
+                    size=(Window.width * 0.25, Window.width * 0.25),
+                )
+                level_btn.bind(on_press=lambda x, level=i: self.on_level_select(level))
+                grid_layout.add_widget(level_btn)
 
         scroll_view.add_widget(grid_layout)
 
@@ -149,16 +162,27 @@ class LevelScreen(RelativeLayout):
             size=(200, 50),
             pos_hint={"center_x": 0.74, "center_y": 0.83},
         )
-        for i in range(1, self.remaining_hearts + 1):
-            heart_image = Image(
-                source=f"./assets/heart{i}.png",
-                size_hint=(None, None),
-                size=(100, 100),
-                pos_hint={
-                    "center_x": 0.25 * i,
-                    "center_y": 0.2,
-                },
-            )
+        for i in range(1, 5 + 1):
+            if i <= self.remaining_hearts:
+                heart_image = Image(
+                    source=f"./assets/heart{i}.png",
+                    size_hint=(None, None),
+                    size=(100, 100),
+                    pos_hint={
+                        "center_x": 0.25 * i,
+                        "center_y": 0.2,
+                    },
+                )
+            else:
+                heart_image = Image(
+                    source="./assets/kosong.png",
+                    size_hint=(None, None),
+                    size=(100, 100),
+                    pos_hint={
+                        "center_x": 0.25 * i,
+                        "center_y": 0.2,
+                    },
+                )
             hearts_layout.add_widget(heart_image)
 
         icons_layout.add_widget(trophy_image)
@@ -193,13 +217,23 @@ class LevelScreen(RelativeLayout):
     def on_level_select(self, level):
         SoundManager.play_arrow_sound()
         if level <= self.current_level:
-            App.get_running_app().stop()
-            SoalApp(
-                zone=self.zone_name,
-                difficulty=self.difficulty,
-                level=level,
-                avatar_path=self.avatar_path,
-            ).run()
+            remaining_hearts = UserDataUtils.get_remaining_hearts()
+            if remaining_hearts <= 0:
+                max_hearts = 5
+                hearts_needed = max_hearts - remaining_hearts
+                time_per_heart = 5 * 60  # 5 menit dalam detik
+                total_time_needed = hearts_needed * time_per_heart
+
+                popup = HeartsEmptyPopup(time_remaining=total_time_needed)
+                popup.open()
+            else:
+                App.get_running_app().stop()
+                SoalApp(
+                    zone=self.zone_name,
+                    difficulty=self.difficulty,
+                    level=level,
+                    avatar_path=self.avatar_path,
+                ).run()
         else:
             self.show_locked_popup()
 

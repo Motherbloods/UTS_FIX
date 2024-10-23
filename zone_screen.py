@@ -44,7 +44,7 @@ class MainWidget(RelativeLayout):
         self.back_btn = ImageButton(
             source="./assets/backk.png",
             size_hint=(None, None),
-            size=Config.get_button_back_size(),
+            size=Config.get_button_back_size(80, 80),
             pos_hint={"center_x": 0.1, "top": 0.965},
         )
         print("Back button created")
@@ -63,9 +63,9 @@ class MainWidget(RelativeLayout):
         self.zone_names = ["kelas_1", "kelas_2", "kelas_3"]
         self.zone_buttons = []
         button_sources = [
-            ("./assets/zone/aritmatika.png", 0.38, 0.78),
-            ("./assets/zone/bangun.png", 0.62, 0.55),
-            ("./assets/zone/pecaha.png", 0.38, 0.322),
+            ("./assets/zone/kelas_1.png", 0.38, 0.78),
+            ("./assets/zone/kelas_2.png", 0.62, 0.55),
+            ("./assets/zone/kelas_3.png", 0.38, 0.322),
         ]
 
         self.avatar_positions = [

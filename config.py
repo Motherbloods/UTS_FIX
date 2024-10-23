@@ -48,8 +48,8 @@ class Config:
         return cls.scaled_size(150, 150)
 
     @classmethod
-    def get_button_back_size(cls):
-        return cls.scaled_size(80, 80)
+    def get_button_back_size(cls, x, y):
+        return cls.scaled_size(x, y)
 
     @classmethod
     def get_image_zone_size(cls):

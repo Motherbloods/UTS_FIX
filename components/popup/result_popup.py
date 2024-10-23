@@ -79,7 +79,7 @@ class ResultPopup(Popup):
             next_btn = ImageButton(
                 source="./assets/lanjut.png",
                 size_hint=(None, None),
-                size=Config.get_button_back_size(),
+                size=Config.get_button_back_size(80, 80),
                 pos_hint={"center_x": 0.5, "center_y": 0.25},
             )
             next_btn.bind(on_release=on_next)
@@ -93,13 +93,13 @@ class ResultPopup(Popup):
             play_again_btn = ImageButton(
                 source="./assets/main_lagi.png",
                 size_hint=(None, None),
-                size=Config.get_button_back_size(),
+                size=Config.get_button_back_size(80, 80),
                 pos_hint={"center_x": 0, "y": 0},
             )
             next_btn = ImageButton(
                 source="./assets/lanjut.png",
                 size_hint=(None, None),
-                size=Config.get_button_back_size(),
+                size=Config.get_button_back_size(80, 80),
                 pos_hint={"center_x": 1, "y": 0},
             )
 

@@ -12,6 +12,7 @@ from components.animated_widget import AnimatedImage
 from components.common_ui import ImageButton
 from components.popup.result_popup import ResultPopup
 from components.popup.show_result_finish_popup import ResultPopupFinish
+from components.popup.unlocked_popup import UnlockedPopup
 from config import Config
 from utils.game_utils import GameUtils
 from utils.user_data_utils import UserDataUtils
@@ -38,7 +39,10 @@ class SoalScreen(Screen):
         self.level_score = 0
         self.wrong_answers = 0
         self.empty_heart_image = "./assets/kosong.png"
-        self.remaining_hearts = UserDataUtils.get_remaining_hearts() or 5
+        self.remaining_hearts = UserDataUtils.get_remaining_hearts()
+        self.max_hearts = 5
+        self.heart_regen_interval = 300
+        self.last_heart_regen_time = UserDataUtils.get_last_heart_regen_time()
         self.hearts = []
         self.heart_positions = []
         self.questions_data = UserDataUtils.load_questions(
@@ -53,21 +57,15 @@ class SoalScreen(Screen):
         self.background = Background()
         self.main_layout.add_widget(self.background)
 
+        Clock.schedule_interval(self.check_heart_regeneration, 1)
         self.setup_ui()
 
     def setup_ui(self):
-        hearts_x_positions = [
-            0.25,
-            0.5,
-            0.75,
-            1,
-            1.25,
-        ]
         hearts_y_position = 0.2
         back_btn = ImageButton(
             source="./assets/backk.png",
             size_hint=(None, None),
-            size=Config.get_button_back_size(),
+            size=Config.get_button_back_size(80, 80),
             pos_hint={"center_x": 0.12, "center_y": 0.95},
         )
         back_btn.bind(on_press=self.play_sound_and_go_back)
@@ -246,26 +244,77 @@ class SoalScreen(Screen):
         self.result_shown = True
         total_score = self.score
         star_rating = self.calculate_star_rating()
-
-        self.popup = ResultPopupFinish(
-            total_score=total_score,
-            star_rating=star_rating,
-            level=self.level,
-            level_score=self.level_score,
-            on_play_again=self.restart_quiz,
-            on_next_level=self.go_to_next_level,
+        UserDataUtils.check_unlocked_avatars()
+        # Check if any avatar was unlocked
+        progress = UserDataUtils.load_user_progress()
+        unlocked_avatar = UserDataUtils.check_newly_unlocked_avatar(
+            progress, self.zone, self.level
         )
-        self.popup.open()
+        if unlocked_avatar:
+
+            def show_result_popup():
+                self.popup = ResultPopupFinish(
+                    total_score=total_score,
+                    star_rating=star_rating,
+                    level=self.level,
+                    zone=self.zone,
+                    level_score=self.level_score,
+                    on_play_again=self.restart_quiz,
+                    on_next_level=self.go_to_next_level,
+                    on_menu_level=self.play_sound_and_go_back,
+                )
+                self.popup.open()
+
+            unlocked_popup = UnlockedPopup(
+                unlocked_avatar=unlocked_avatar, on_close_callback=show_result_popup
+            )
+            unlocked_popup.open()
+        else:
+            self.popup = ResultPopupFinish(
+                total_score=total_score,
+                star_rating=star_rating,
+                level=self.level,
+                zone=self.zone,
+                level_score=self.level_score,
+                on_play_again=self.restart_quiz,
+                on_next_level=self.go_to_next_level,
+                on_menu_level=self.play_sound_and_go_back,
+            )
+            self.popup.open()
 
         self.update_user_progress()
 
+    def check_heart_regeneration(self, dt):
+        current_time = time.time()
+        time_since_last_regen = current_time - self.last_heart_regen_time
+
+        if (
+            self.remaining_hearts < self.max_hearts
+            and time_since_last_regen >= self.heart_regen_interval
+        ):
+            self.regenerate_heart()
+            self.last_heart_regen_time = current_time
+            UserDataUtils.save_last_heart_regen_time(current_time)
+
+    def regenerate_heart(self):
+        if self.remaining_hearts < self.max_hearts:
+            self.remaining_hearts += 1
+            UserDataUtils.save_remaining_hearts(self.remaining_hearts)
+
+            # Update heart display
+            heart_index = self.remaining_hearts - 1
+            if heart_index >= 0 and heart_index < len(self.hearts):
+                self.hearts[heart_index].source = f"./assets/heart{heart_index + 1}.png"
+                self.hearts[heart_index].opacity = 1
+
     def handle_wrong_answer(self):
         self.wrong_answers += 1
-        print(f"ini self worng {self.wrong_answers}")
-
         if self.wrong_answers == 3:
             hearts_x_positions = [0.668, 0.741, 0.814, 0.887, 0.96]
             self.remaining_hearts -= 1
+
+            self.last_heart_regen_time = time.time()
+            UserDataUtils.save_last_heart_regen_time(self.last_heart_regen_time)
 
             self.animated_heart.pos_hint = {
                 "center_x": hearts_x_positions[self.remaining_hearts],
@@ -292,6 +341,9 @@ class SoalScreen(Screen):
     def show_empty_heart(self, dt):
         self.hearts[self.remaining_hearts].opacity = 1
         self.hearts[self.remaining_hearts].source = self.empty_heart_image
+
+    def on_menu_level(self):
+        pass
 
     def go_to_next_level(self, instance):
         SoundManager.play_arrow_sound()
@@ -341,6 +393,7 @@ class SoalScreen(Screen):
         self.go_back(instance)
 
     def go_back(self, instance):
+
         self.wrong_answers = 0
         UserDataUtils.save_remaining_hearts(self.remaining_hearts)
         App.get_running_app().stop()

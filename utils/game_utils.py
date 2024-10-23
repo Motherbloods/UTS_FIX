@@ -48,7 +48,6 @@ class GameUtils:
 
     @staticmethod
     def calculate_star_rating(score, total_questions):
-        print(f"ini score {score} {total_questions}")
         score_percentage = (score / total_questions) * 100
         if score_percentage == 100:
             return "3B"
@@ -58,8 +57,10 @@ class GameUtils:
             return "2B"
         elif score_percentage >= 40:
             return "1_5B"
-        else:
+        elif score_percentage >= 20:
             return "1B"
+        else:
+            return "0B"
 
     @staticmethod
     def calculate_total_stars(level_scores):
