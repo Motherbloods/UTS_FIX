@@ -7,6 +7,7 @@ from utils.constants import *
 
 
 class UserDataUtils:
+    _cached_progress = None
     AVATAR_UNLOCK_REQUIREMENTS = {
         "Bee": {"difficulty": "mudah", "class": 1},
         "Knight": {"difficulty": "mudah", "class": 2},
@@ -15,6 +16,25 @@ class UserDataUtils:
         "Roger": {"difficulty": "sedang", "class": 3},
         "Wizard": {"difficulty": "all", "class": "all"},
     }
+
+    @staticmethod
+    def save_avatar_selection(static_path, animated_base_path):
+        """Save the user's avatar selection to persistent storage"""
+        store = JsonStore("user_progress.json")
+        store.put(
+            "avatar_selection",
+            static_path=static_path,
+            animated_base_path=animated_base_path,
+        )
+
+    @staticmethod
+    def load_avatar_selection():
+        """Load the user's saved avatar selection"""
+        store = JsonStore("user_progress.json")
+        if store.exists("avatar_selection"):
+            selection = store.get("avatar_selection")
+            return selection["static_path"], selection["animated_base_path"]
+        return "./assets/avatar/png/ninja.png", "./assets/avatar/gif/male/male-"
 
     @staticmethod
     def load_user_score():
@@ -93,6 +113,8 @@ class UserDataUtils:
 
         current_progress[level_scores_key] = level_scores
         store.put("user_progress", **current_progress)
+        UserDataUtils._cached_progress = current_progress
+        return current_progress
 
     def load_question(screen_instance):
         if screen_instance.current_question < len(screen_instance.questions):
@@ -161,11 +183,10 @@ class UserDataUtils:
     @staticmethod
     def check_zone_completion(progress, zone, difficulty):
         zone_scores = progress.get(f"{zone}_{difficulty}_level_scores", {})
-
         if not zone_scores:
             return False
         total_levels = 9
-        completed_levels = 1
+        completed_levels = 0
 
         for level in range(1, total_levels + 1):
             level_key = f"{zone}_{difficulty}_{level}"
@@ -173,7 +194,7 @@ class UserDataUtils:
                 level_data = zone_scores[level_key]
                 if level_data.get("score", 0) > 0:
                     completed_levels += 1
-        print(total_levels, completed_levels)
+        print(f"ini adlaah totoal level{total_levels} dan complete {completed_levels}")
         return completed_levels == total_levels
 
     @staticmethod
@@ -181,15 +202,14 @@ class UserDataUtils:
         progress = UserDataUtils.load_user_progress()
 
         unlocked_avatars = list(AVATAR_OPTIONS.items())
+        unlocked_avatarrs = dict(DEFAULT_AVATAR_OPTIONS)
 
-        for avatar_data in LOCKED_AVATARS[
-            :
-        ]:  # Use slice copy to safely modify during iteration
+        for avatar_data in LOCKED_AVATARS[:]:
             static_path, name, hover_path, gif_path = avatar_data
             avatar_key = name.lower()
             should_unlock = False
+            print(f"ini avatar key {avatar_key}")
 
-            # Check unlock conditions for each avatar
             if avatar_key == "bee":
                 should_unlock = UserDataUtils.check_zone_completion(
                     progress, "kelas_1", "mudah"
@@ -231,7 +251,10 @@ class UserDataUtils:
             if should_unlock:
                 # Convert locked avatar to unlocked format
                 new_avatar = (static_path.replace("/lock/", "/"), name), gif_path
-
+                unlocked_path = static_path.replace("/lock/", "/")
+                new_avatar_key = (unlocked_path, name)
+                unlocked_avatarrs[new_avatar_key] = gif_path
+                print(f"ini adlaah {unlocked_avatarrs}")
                 if new_avatar not in unlocked_avatars:
                     unlocked_avatars.append(new_avatar)
                     LOCKED_AVATARS.remove(avatar_data)
@@ -241,14 +264,12 @@ class UserDataUtils:
 
     @staticmethod
     def check_newly_unlocked_avatar(progress, zone, level):
-        # Extract the class number from zone (e.g., "kelas_1" -> 1)
         current_class = int(zone.split("_")[1]) if "_" in zone else None
 
         for (
             avatar_name,
             requirements,
         ) in UserDataUtils.AVATAR_UNLOCK_REQUIREMENTS.items():
-            print(requirements["class"], avatar_name, current_class)
             if requirements["class"] == "all" and zone == "kelas_3":
                 all_completed = True
                 for z in ["kelas_1", "kelas_2", "kelas_3"]:
@@ -260,11 +281,8 @@ class UserDataUtils:
                     return avatar_name
 
             elif requirements["class"] == current_class:
-                print("ini di eliff")
                 if requirements["difficulty"] == "mudah":
-                    print("ini di mudah difuflu")
                     if UserDataUtils.check_zone_completion(progress, zone, "mudah"):
-                        print(f"ini avatar name{avatar_name}")
                         return avatar_name
                 elif requirements["difficulty"] == "sedang":
                     if UserDataUtils.check_zone_completion(progress, zone, "sedang"):

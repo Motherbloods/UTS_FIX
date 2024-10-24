@@ -82,7 +82,7 @@ class LevelScreen(RelativeLayout):
             if i > self.current_level:
                 print(f"ini kepanggil {i}")
                 animated_button = AnimatedImage(
-                    base_path="./gif4/frame_",
+                    base_path="./assets/avatar/gif/gembok/frame_",
                     frame_count=100,
                     fps=20,
                     loop_reverse=True,

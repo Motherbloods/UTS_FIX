@@ -2,6 +2,7 @@ from kivy.uix.popup import Popup
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
+from kivy.uix.scrollview import ScrollView
 from kivy.uix.image import Image
 from kivy.uix.label import Label
 from components.common_ui import LabeledAvatar
@@ -98,35 +99,73 @@ class AvatarPopup(Popup):
 
     def show_available_content(self):
         UserDataUtils.check_unlocked_avatars()
-        self.content_layout.pos_hint = {"center_x": 0.52, "center_y": 0.53}
+
+        # Container for the upper part (current avatar and labels)
+        upper_container = BoxLayout(
+            orientation="vertical",
+            size_hint=(1, 0.4),
+            pos_hint={"center_x": 0.55, "top": 1.4},
+            spacing=10,
+        )
+
+        # Current avatar image
         current_avatar_image = Image(
             source=self.current_avatar,
             size_hint=(None, None),
-            size=(150, 150),
-            pos_hint={"center_x": 0.5, "center_y": 0.7},
+            size=(100, 100),
         )
-        self.content_layout.add_widget(current_avatar_image)
+        current_avatar_container = BoxLayout(
+            size_hint=(None, None),
+            size=(100, 100),
+            pos_hint={"center_x": 0.5},  # Center the avatar container horizontally
+        )
+        current_avatar_container.add_widget(current_avatar_image)
+        upper_container.add_widget(current_avatar_container)
+
+        # Current avatar name
+        current_avatar_name = self.get_current_avatar_name()
+        current_avatar_label = Label(
+            text=current_avatar_name,
+            size_hint=(1, None),
+            height=30,
+            font_size=16,
+            bold=True,
+            halign="center",
+            font_name="Bungee",
+            color=CUSTOM_COLOR,
+        )
+        upper_container.add_widget(current_avatar_label)
 
         pilih_avatar_label = Label(
             text="Pilih Avatar Lain",
-            size_hint=(None, None),
-            size=Config.get_avatar_popup_size(),
+            size_hint=(1, None),
+            height=30,
             font_size=18,
             bold=True,
             halign="center",
             font_name="Bungee",
             color=CUSTOM_COLOR,
-            pos_hint={"center_x": 0.5, "center_y": 0.5},
         )
-        self.content_layout.add_widget(pilih_avatar_label)
+        upper_container.add_widget(pilih_avatar_label)
 
-        avatar_grid = GridLayout(
-            cols=3,
-            spacing=50,
-            size_hint=(0.8, 0.3),
-            pos_hint={"center_x": 0.55, "center_y": 0.3},
+        self.content_layout.add_widget(upper_container)
+
+        # Create ScrollView for avatars
+        scroll_view = ScrollView(
+            size_hint=(0.8, 0.35),
+            pos_hint={"center_x": 0.55, "center_y": 0.8},
+            do_scroll_x=False,
+            do_scroll_y=True,
+            bar_width=10,
+            scroll_type=["bars", "content"],
         )
 
+        # Create GridLayout for avatars
+        avatar_grid = GridLayout(cols=3, spacing=50, size_hint=(1, None), padding=20)
+        # Make the grid's height adjust to its content
+        avatar_grid.bind(minimum_height=avatar_grid.setter("height"))
+
+        # Add avatars to grid
         for (static_path, label_text), animated_base_path in AVATAR_OPTIONS.items():
             labeled_avatar = LabeledAvatar(source=static_path, label_text=label_text)
             labeled_avatar.avatar.bind(
@@ -134,10 +173,10 @@ class AvatarPopup(Popup):
                     self.on_avatar_change, path, anim_path
                 )
             )
-
             avatar_grid.add_widget(labeled_avatar)
 
-        self.content_layout.add_widget(avatar_grid)
+        scroll_view.add_widget(avatar_grid)
+        self.content_layout.add_widget(scroll_view)
 
     def show_locked_content(self):
         self.content_layout.pos_hint = {"center_x": 0.52, "center_y": 0.6}
@@ -171,6 +210,13 @@ class AvatarPopup(Popup):
             locked_grid.add_widget(labeled_avatar)
 
         self.content_layout.add_widget(locked_grid)
+
+    def get_current_avatar_name(self):
+        # Find the label text for the current avatar
+        for (static_path, label_text), _ in AVATAR_OPTIONS.items():
+            if static_path == self.current_avatar:
+                return label_text
+        return "Avatar"
 
     def show_available_avatars(self, instance):
         SoundManager.play_arrow_sound()

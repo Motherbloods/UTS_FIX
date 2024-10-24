@@ -8,7 +8,7 @@ class SoundManager:
     @classmethod
     def initialize_bgm(cls):
         if cls.bgm_instance is None:
-            cls.bgm_instance = SoundLoader.load("./assets/bgmm.mp3")
+            cls.bgm_instance = SoundLoader.load("./assets/bgm.mp3")
             if cls.bgm_instance:
                 cls.bgm_instance.loop = True
                 cls.bgm_instance.play()

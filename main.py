@@ -25,8 +25,9 @@ class MainApp(App):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.current_avatar_path = "./assets/avatar/gif/male/male-"
-        self.current_static_avatar = "./assets/avatar/png/ninja.png"
+        static_path, animated_path = UserDataUtils.load_avatar_selection()
+        self.current_avatar_path = animated_path
+        self.current_static_avatar = static_path
         self.avatar_popup = None
         self.settings_popup = None
         self.keyboard_manager = None
@@ -53,7 +54,7 @@ class MainApp(App):
         self.root.add_widget(self.background)
 
         self.static_avatar = ClickableImage(
-            source="./assets/avatar/png/ninja.png",
+            source=self.current_static_avatar,
             size_hint=(None, None),
             size=Config.get_avatar_size(50, 50),
             pos_hint={"x": 0.02, "top": 0.95},
@@ -147,6 +148,8 @@ class MainApp(App):
         self.current_avatar_path = animated_base_path
         self.static_avatar.update_source(static_path)
         self.animated_avatar.update_animation(animated_base_path, 6)
+        UserDataUtils.save_avatar_selection(static_path, animated_base_path)
+
         if self.avatar_popup:
             self.avatar_popup.current_avatar = static_path
             self.avatar_popup.dismiss()

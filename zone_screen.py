@@ -89,8 +89,8 @@ class MainWidget(RelativeLayout):
         self.update_selection()
 
         self.loading_animation = AnimatedImage(
-            base_path="./gif/frame_",
-            frame_count=150,
+            base_path="./assets/avatar/gif/loading/frame_",
+            frame_count=50,
             fps=16,
             loop_reverse=False,
             size_hint=(1, 1),

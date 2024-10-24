@@ -36,53 +36,21 @@ class ResultPopupFinish(Popup):
 
         self.content = FloatLayout()
 
-        # Check if any avatar was unlocked
-        progress = UserDataUtils.load_user_progress()
-        unlocked_avatar = UserDataUtils.check_newly_unlocked_avatar(
-            progress, zone, level
-        )
-        if unlocked_avatar:
-            # Show unlocked avatar image
-            avatar_image = Image(
-                source=f"./assets/avatar/png/{unlocked_avatar.lower()}.png",
-                size_hint=(None, None),
-                size=(200, 200),
-                pos_hint={"center_x": 0.5, "center_y": 0.95},
-            )
-            self.content.add_widget(avatar_image)
-
-            print(f"ni level {level}")
-            if level == 9:
-                SoundManager.play_sound("./assets/aplause.mp3")
-                image_source = f"./assets/{zone}_done.png"
-            else:
-                if star_rating == "3B":
-                    image_source = "./assets/sempurna.png"
-                else:
-                    image_source = "./assets/salah_2.png"
-            new_image = Image(
-                source=image_source,
-                size_hint=(None, None),
-                size=(280, 260),
-                pos_hint={"center_x": 0.5, "center_y": 0.75},
-            )
+        if level == 9:
+            SoundManager.play_sound("./assets/aplause.mp3")
+            image_source = f"./assets/{zone}_done.png"
         else:
-            print(f"ni level {level}")
-            if level == 9:
-                SoundManager.play_sound("./assets/aplause.mp3")
-                image_source = f"./assets/{zone}_done.png"
+            if star_rating == "3B":
+                image_source = "./assets/sempurna.png"
             else:
-                if star_rating == "3B":
-                    image_source = "./assets/sempurna.png"
-                else:
-                    image_source = "./assets/salah_2.png"
+                image_source = "./assets/salah_2.png"
 
-            new_image = Image(
-                source=image_source,
-                size_hint=(None, None),
-                size=(280, 260),
-                pos_hint={"center_x": 0.5, "center_y": 0.85},
-            )
+        new_image = Image(
+            source=image_source,
+            size_hint=(None, None),
+            size=(280, 260),
+            pos_hint={"center_x": 0.5, "center_y": 0.85},
+        )
 
         self.content.add_widget(new_image)
 
@@ -150,8 +118,8 @@ class ResultPopupFinish(Popup):
 
         self.overlay = FloatLayout()
         self.animated_image = AnimatedImage(
-            base_path="./gif2/frame_",
-            frame_count=305,
+            base_path="./assets/avatar/gif/complete/frame_",
+            frame_count=100,
             fps=50,
             size={200, 400},
             pos_hint={"center_x": 0.5, "center_y": 0.5},

@@ -14,7 +14,7 @@ class SplashScreen(FloatLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.background = Image(
-            source="./assets/bg_splash.jpg", allow_stretch=True, keep_ratio=False
+            source="./assets/logo2.png", allow_stretch=True, keep_ratio=False
         )
         self.add_widget(self.background)
 

@@ -41,7 +41,7 @@ class SoalScreen(Screen):
         self.empty_heart_image = "./assets/kosong.png"
         self.remaining_hearts = UserDataUtils.get_remaining_hearts()
         self.max_hearts = 5
-        self.heart_regen_interval = 300
+        self.heart_regen_interval = 90
         self.last_heart_regen_time = UserDataUtils.get_last_heart_regen_time()
         self.hearts = []
         self.heart_positions = []
@@ -239,6 +239,7 @@ class SoalScreen(Screen):
             self.popup = None
 
     def show_result(self):
+        self.update_user_progress()
         if self.result_shown:
             return
         self.result_shown = True
@@ -281,8 +282,6 @@ class SoalScreen(Screen):
                 on_menu_level=self.play_sound_and_go_back,
             )
             self.popup.open()
-
-        self.update_user_progress()
 
     def check_heart_regeneration(self, dt):
         current_time = time.time()
