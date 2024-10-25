@@ -2,5 +2,4 @@
 __pycache__
 bin
 skip
-buildozer.spec
 user_progress.json
