@@ -18,33 +18,34 @@ jobs:
       with:
         java-version: '11'
 
-    - name: Set up Python
+    - name: Install Python 3.8
       uses: actions/setup-python@v2
       with:
         python-version: '3.8'
 
-    - name: Install Buildozer dependencies
+    - name: Install Android SDK Command Line Tools
       run: |
-        sudo apt update
-        sudo apt install -y build-essential libssl-dev libffi-dev python3-dev python3-venv
-        python3 -m pip install --upgrade pip
-        pip install --user buildozer cython
-
-    - name: Install Android SDK
-      run: |
-        sudo apt-get install -y wget tar unzip
-        wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
         mkdir -p $HOME/android-sdk/cmdline-tools
-        unzip commandlinetools-linux-9477386_latest.zip -d $HOME/android-sdk/cmdline-tools
+        curl -o commandlinetools.zip https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
+        unzip commandlinetools.zip -d $HOME/android-sdk/cmdline-tools
+        mv $HOME/android-sdk/cmdline-tools/cmdline-tools $HOME/android-sdk/cmdline-tools/latest
         export ANDROID_HOME=$HOME/android-sdk
-        export PATH=$ANDROID_HOME/cmdline-tools/tools/bin:$PATH
-        echo "sdk.dir=$ANDROID_HOME" > local.properties
+        export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
+        sdkmanager --version
         sdkmanager "platform-tools" "platforms;android-31" "build-tools;31.0.0"
         sdkmanager --licenses
-        sdkmanager "ndk;21.3.6528147"  # Pilih versi NDK yang tepat
 
-    - name: Build with Buildozer
+    - name: Install dependencies
       run: |
-        export ANDROIDSDK=$HOME/android-sdk
-        export ANDROIDNDK=$ANDROIDSDK/ndk/21.3.6528147  # Versi NDK yang diinstall sebelumnya
+        python -m pip install --upgrade pip
+        pip install --upgrade Cython buildozer
+        
+    - name: Build APK
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y libffi-dev libssl-dev
+        sudo apt-get install -y autoconf automake libtool
+        sudo apt-get install -y zlib1g-dev
+        export ANDROID_NDK_HOME=$HOME/android-sdk/ndk/21.4.7075529
+        export PATH=$PATH:$ANDROID_HOME/platform-tools
         buildozer android debug
