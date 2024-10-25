@@ -44,7 +44,6 @@ class MainApp(App):
         base_width = 450
         window_height = int(base_width * (16 / 9))
         Window.size = (base_width, window_height)
-        print(f"ini windows size main {base_width} {window_height}")
         self.root = RelativeLayout()
 
         self.keyboard_manager = KeyboardManager(self)

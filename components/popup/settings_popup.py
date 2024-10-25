@@ -218,7 +218,6 @@ class SettingsPopup(Popup):
     def on_difficulty_change(self, instance):
         if instance.state == "down":
             SettingsManager.set_difficulty(instance.difficulty)
-            print(f"Difficulty set to: {SettingsManager.get_difficulty()}")
         self.update_avatar_position(instance.difficulty)
 
     def update_avatar_position(self, difficulty):

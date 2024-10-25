@@ -129,7 +129,6 @@ class ResultPopupFinish(Popup):
         Clock.schedule_once(self.show_animated_overlay, 0.1)
 
     def add_star_rating(self, star_rating):
-        print(star_rating)
         star_images = []
 
         if "_" in star_rating:

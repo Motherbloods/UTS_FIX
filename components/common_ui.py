@@ -60,6 +60,7 @@ class HoverAvatar(LabeledAvatar):
         self.gif_path = gif_path
         self.animated_widget = None
         Window.bind(mouse_pos=self.on_mouse_pos)
+        self.avatar.bind(on_press=self.on_avatar_press)
 
     def on_mouse_pos(self, *args):
         if not self.avatar.get_root_window():
@@ -72,6 +73,9 @@ class HoverAvatar(LabeledAvatar):
             self.avatar.source = self.hover_source
         else:
             self.avatar.source = self.normal_source
+
+    def on_avatar_press(self, instance):
+        print(f"ini diklik {self}")
 
 
 # class HoverAvatar(LabeledAvatar):

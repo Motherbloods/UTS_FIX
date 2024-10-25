@@ -69,7 +69,7 @@ class AvatarPopup(Popup):
         button_layout.add_widget(self.shop_avatar)
         popup_layout.add_widget(button_layout)
 
-        self.content_layout = FloatLayout()
+        self.content_layout = FloatLayout(size_hint=(1, 1))
         self.update_content_layout()
         popup_layout.add_widget(self.content_layout)
 
@@ -90,11 +90,14 @@ class AvatarPopup(Popup):
         return popup_layout
 
     def update_content_layout(self):
+        # self.content_layout.pos_hint = {"center_x": 0.8}
         self.content_layout.clear_widgets()
 
         if not self.show_locked:
+            self.content_layout.pos_hint = {"center_y": 0}
             self.show_available_content()
         else:
+            self.content_layout.pos_hint = {"center_y": 0.6}
             self.show_locked_content()
 
     def show_available_content(self):
@@ -104,7 +107,7 @@ class AvatarPopup(Popup):
         upper_container = BoxLayout(
             orientation="vertical",
             size_hint=(1, 0.4),
-            pos_hint={"center_x": 0.55, "top": 1.4},
+            pos_hint={"center_x": 0.55, "top": 1.45},
             spacing=10,
         )
 
@@ -153,7 +156,7 @@ class AvatarPopup(Popup):
         # Create ScrollView for avatars
         scroll_view = ScrollView(
             size_hint=(0.8, 0.35),
-            pos_hint={"center_x": 0.55, "center_y": 0.8},
+            pos_hint={"center_x": 0.58, "center_y": 0.85},
             do_scroll_x=False,
             do_scroll_y=True,
             bar_width=10,
@@ -179,7 +182,6 @@ class AvatarPopup(Popup):
         self.content_layout.add_widget(scroll_view)
 
     def show_locked_content(self):
-        self.content_layout.pos_hint = {"center_x": 0.52, "center_y": 0.6}
         locked_label = Label(
             text="Avatar Terkunci",
             size_hint=(None, None),
@@ -189,7 +191,7 @@ class AvatarPopup(Popup):
             halign="center",
             font_name="Bungee",
             color=CUSTOM_COLOR,
-            pos_hint={"center_x": 0.5, "center_y": 0.7},
+            pos_hint={"center_x": 0.55, "center_y": 0.7},
         )
         self.content_layout.add_widget(locked_label)
 
@@ -197,7 +199,7 @@ class AvatarPopup(Popup):
             cols=3,
             spacing=50,
             size_hint=(0.8, 0.5),
-            pos_hint={"center_x": 0.55, "center_y": 0.4},
+            pos_hint={"center_x": 0.62, "center_y": 0.4},
         )
 
         for static_path, label_text, hover_path, gif_path in LOCKED_AVATARS:

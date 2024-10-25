@@ -57,7 +57,6 @@ class SplashScreen(FloatLayout):
 class SplashApp(App):
     def build(self):
         Window.size = MainApp.get_window_size()
-        print(f"SplashApp build - Window size: {Window.size}")
         self.splash_screen = SplashScreen()
         self.total_time = 5
         self.elapsed_time = 0

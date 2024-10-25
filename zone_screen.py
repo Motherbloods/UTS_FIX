@@ -47,9 +47,7 @@ class MainWidget(RelativeLayout):
             size=Config.get_button_back_size(80, 80),
             pos_hint={"center_x": 0.1, "top": 0.965},
         )
-        print("Back button created")
         self.back_btn.bind(on_release=self.play_sound_and_go_back)
-        print("Back button bound")
         self.add_widget(self.back_btn)
 
         title_img = ImageButton(
@@ -103,7 +101,6 @@ class MainWidget(RelativeLayout):
     def on_touch_down(self, touch):
         for child in self.children:
             if child.collide_point(*touch.pos):
-                print(f"Touched {child}")
                 if isinstance(child, ImageButton):
                     child.dispatch("on_release")
         return super(MainWidget, self).on_touch_down(touch)

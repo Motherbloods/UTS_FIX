@@ -41,7 +41,7 @@ class SoalScreen(Screen):
         self.empty_heart_image = "./assets/kosong.png"
         self.remaining_hearts = UserDataUtils.get_remaining_hearts()
         self.max_hearts = 5
-        self.heart_regen_interval = 90
+        self.heart_regen_interval = 15
         self.last_heart_regen_time = UserDataUtils.get_last_heart_regen_time()
         self.hearts = []
         self.heart_positions = []
@@ -245,12 +245,13 @@ class SoalScreen(Screen):
         self.result_shown = True
         total_score = self.score
         star_rating = self.calculate_star_rating()
-        UserDataUtils.check_unlocked_avatars()
-        # Check if any avatar was unlocked
         progress = UserDataUtils.load_user_progress()
+        UserDataUtils.check_unlocked_avatars()
+
         unlocked_avatar = UserDataUtils.check_newly_unlocked_avatar(
-            progress, self.zone, self.level
+            progress, self.zone, self.difficulty
         )
+        print(f"ini uncloded avatar {unlocked_avatar}")
         if unlocked_avatar:
 
             def show_result_popup():

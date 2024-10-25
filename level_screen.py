@@ -80,7 +80,6 @@ class LevelScreen(RelativeLayout):
         grid_layout.bind(minimum_height=grid_layout.setter("height"))
         for i in range(1, 10):
             if i > self.current_level:
-                print(f"ini kepanggil {i}")
                 animated_button = AnimatedImage(
                     base_path="./assets/avatar/gif/gembok/frame_",
                     frame_count=100,

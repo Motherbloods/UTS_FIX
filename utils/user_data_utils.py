@@ -91,6 +91,7 @@ class UserDataUtils:
         level_key = f"{zone}_{difficulty}_{level}"
         existing_score = level_scores.get(level_key, {})
         existing_star_rating = existing_score.get("star_rating", "0B")
+
         if compare_star_ratings_func(star_rating, existing_star_rating) > 0:
 
             level_scores[level_key] = {
@@ -147,16 +148,122 @@ class UserDataUtils:
     @staticmethod
     def get_remaining_hearts():
         store = JsonStore("user_progress.json")
-        if store.exists("hearts"):
-            hearts = store.get("hearts")["value"]
-            return hearts if hearts is not None else 5
-        else:
-            return 5
+        DEFAULT_HEARTS = 5
+        HEART_REGEN_INTERVAL = 90  # Interval regenerasi dalam detik
+        MAX_HEARTS = DEFAULT_HEARTS
+
+        try:
+            # Mendapatkan data dari store
+            if store.exists("hearts"):
+                hearts_data = store.get("hearts")
+
+                # Memeriksa nilai hati dan waktu regenerasi yang tersimpan
+                stored_hearts = hearts_data.get(
+                    "value", DEFAULT_HEARTS
+                )  # Ambil nilai hati atau default
+                last_regen_timestamp = hearts_data.get(
+                    "last_regen", None
+                )  # Ambil last_regen atau None
+
+                # Jika tidak ada last_regen, inisialisasi dengan waktu sekarang
+                if last_regen_timestamp is None:
+                    print("No last_regen found, initializing with current time")
+                    last_regen_timestamp = time.time()
+                    store.put(
+                        "hearts", value=stored_hearts, last_regen=last_regen_timestamp
+                    )
+
+                # Validasi nilai hati yang tersimpan
+                if stored_hearts is not None and isinstance(
+                    stored_hearts, (int, float)
+                ):
+                    if stored_hearts < 0:
+                        print(
+                            "Warning: Invalid negative hearts value found, resetting to 0"
+                        )
+                        store.put("hearts", value=0, last_regen=time.time())
+                        return 0
+                    elif stored_hearts > MAX_HEARTS:
+                        print(
+                            f"Warning: Hearts value {stored_hearts} exceeds maximum, resetting to {MAX_HEARTS}"
+                        )
+                        store.put("hearts", value=MAX_HEARTS, last_regen=time.time())
+                        return MAX_HEARTS
+
+                    # Menghitung waktu yang berlalu sejak regenerasi terakhir
+                    current_time = time.time()
+                    elapsed_time = current_time - last_regen_timestamp
+
+                    # Debugging: Print nilai waktu yang telah berlalu
+                    print(f"Elapsed time since last regen: {elapsed_time} seconds")
+
+                    regen_amount = int(elapsed_time // HEART_REGEN_INTERVAL)
+
+                    # Jika cukup waktu berlalu untuk meregenerasi hati
+                    if regen_amount > 0:
+                        new_hearts = min(stored_hearts + regen_amount, MAX_HEARTS)
+
+                        # Debugging: Print jumlah hati yang baru dan regenerasi
+                        print(
+                            f"Regenerated {regen_amount} hearts. New total: {new_hearts}"
+                        )
+
+                        # Perbarui waktu regenerasi terakhir
+                        if new_hearts == MAX_HEARTS:
+                            # Jika hati mencapai maksimum, setel last_regen menjadi waktu sekarang
+                            store.put(
+                                "hearts", value=new_hearts, last_regen=current_time
+                            )
+                        else:
+                            # Jika belum maksimum, setel last_regen berdasarkan waktu yang tersisa
+                            new_last_regen = last_regen_timestamp + (
+                                regen_amount * HEART_REGEN_INTERVAL
+                            )
+                            store.put(
+                                "hearts", value=new_hearts, last_regen=new_last_regen
+                            )
+
+                        return new_hearts
+
+                    # Tidak ada hati yang bisa diregenerasi
+                    return int(stored_hearts)
+                else:
+                    print(
+                        "Warning: Invalid hearts value found, initializing with default"
+                    )
+            else:
+                print("Info: No hearts data found, initializing with default")
+
+            # Jika data hati tidak valid atau tidak ada, inisialisasi dengan default
+            store.put("hearts", value=DEFAULT_HEARTS, last_regen=time.time())
+            return DEFAULT_HEARTS
+
+        except Exception as e:
+            print(f"Error reading hearts data: {str(e)}, using default value")
+            return DEFAULT_HEARTS
 
     @staticmethod
     def save_remaining_hearts(hearts):
-        store = JsonStore("user_progress.json")
-        store.put("hearts", value=hearts)
+        try:
+            DEFAULT_HEARTS = 5
+            # Validate hearts value before saving
+            if hearts is None or not isinstance(hearts, (int, float)):
+                print("Warning: Invalid hearts value, not saving")
+                return False
+
+            hearts = int(hearts)  # Convert to integer
+            if hearts < 0:
+                hearts = 0
+            elif hearts > DEFAULT_HEARTS:
+                hearts = DEFAULT_HEARTS
+
+            store = JsonStore("user_progress.json")
+            store.put("hearts", value=hearts)
+            return True
+
+        except Exception as e:
+            print(f"Error saving hearts data: {str(e)}")
+            return False
 
     @staticmethod
     def get_last_heart_regen_time():
@@ -194,7 +301,6 @@ class UserDataUtils:
                 level_data = zone_scores[level_key]
                 if level_data.get("score", 0) > 0:
                     completed_levels += 1
-        print(f"ini adlaah totoal level{total_levels} dan complete {completed_levels}")
         return completed_levels == total_levels
 
     @staticmethod
@@ -208,8 +314,6 @@ class UserDataUtils:
             static_path, name, hover_path, gif_path = avatar_data
             avatar_key = name.lower()
             should_unlock = False
-            print(f"ini avatar key {avatar_key}")
-
             if avatar_key == "bee":
                 should_unlock = UserDataUtils.check_zone_completion(
                     progress, "kelas_1", "mudah"
@@ -254,7 +358,7 @@ class UserDataUtils:
                 unlocked_path = static_path.replace("/lock/", "/")
                 new_avatar_key = (unlocked_path, name)
                 unlocked_avatarrs[new_avatar_key] = gif_path
-                print(f"ini adlaah {unlocked_avatarrs}")
+
                 if new_avatar not in unlocked_avatars:
                     unlocked_avatars.append(new_avatar)
                     LOCKED_AVATARS.remove(avatar_data)
@@ -264,12 +368,15 @@ class UserDataUtils:
 
     @staticmethod
     def check_newly_unlocked_avatar(progress, zone, level):
+        UserDataUtils.initialize_unlocked_avatars_tracking()
         current_class = int(zone.split("_")[1]) if "_" in zone else None
-
+        newly_unlocked = None
         for (
             avatar_name,
             requirements,
         ) in UserDataUtils.AVATAR_UNLOCK_REQUIREMENTS.items():
+            if UserDataUtils.is_avatar_already_unlocked(avatar_name):
+                continue
             if requirements["class"] == "all" and zone == "kelas_3":
                 all_completed = True
                 for z in ["kelas_1", "kelas_2", "kelas_3"]:
@@ -278,13 +385,50 @@ class UserDataUtils:
                             all_completed = False
                             break
                 if all_completed:
-                    return avatar_name
+                    newly_unlocked = avatar_name
 
             elif requirements["class"] == current_class:
                 if requirements["difficulty"] == "mudah":
                     if UserDataUtils.check_zone_completion(progress, zone, "mudah"):
-                        return avatar_name
+                        newly_unlocked = avatar_name
                 elif requirements["difficulty"] == "sedang":
                     if UserDataUtils.check_zone_completion(progress, zone, "sedang"):
-                        return avatar_name
-        return None
+                        newly_unlocked = avatar_name
+        if newly_unlocked:
+            UserDataUtils.mark_avatar_as_unlocked(newly_unlocked)
+        return newly_unlocked
+
+    @staticmethod
+    def initialize_unlocked_avatars_tracking():
+        store = JsonStore("user_progress.json")
+        if not store.exists("unlocked_avatars"):
+            store.put(
+                "unlocked_avatars",
+                avatars=["ninja", "male", "female"],
+            )
+
+    @staticmethod
+    def is_avatar_already_unlocked(avatar_name):
+        """Check if an avatar has been previously unlocked"""
+        store = JsonStore("user_progress.json")
+        if not store.exists("unlocked_avatars"):
+            UserDataUtils.initialize_unlocked_avatars_tracking()
+        unlocked_avatars = store.get("unlocked_avatars")["avatars"]
+        return avatar_name.lower() in [a.lower() for a in unlocked_avatars]
+
+    @staticmethod
+    def mark_avatar_as_unlocked(avatar_name):
+        """Mark an avatar as unlocked in persistent storage"""
+        if not avatar_name:
+            return
+
+        store = JsonStore("user_progress.json")
+        if not store.exists("unlocked_avatars"):
+            UserDataUtils.initialize_unlocked_avatars_tracking()
+
+        current_unlocked = store.get("unlocked_avatars")["avatars"]
+        avatar_name = avatar_name.lower()
+
+        if avatar_name not in [a.lower() for a in current_unlocked]:
+            current_unlocked.append(avatar_name)
+            store.put("unlocked_avatars", avatars=current_unlocked)
