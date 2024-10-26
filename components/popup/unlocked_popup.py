@@ -9,6 +9,7 @@ from utils.sound_manager import SoundManager
 
 class UnlockedPopup(Popup):
     def __init__(self, unlocked_avatar, on_close_callback, **kwargs):
+        kwargs["auto_dismiss"] = False
         super(UnlockedPopup, self).__init__(**kwargs)
         self.title = " "
         self.separator_height = 0

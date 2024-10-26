@@ -41,10 +41,11 @@ class ImageButton(ToggleButtonBehavior, Image):
 
 class SettingsPopup(Popup):
     def __init__(self, current_avatar_path, **kwargs):
+        kwargs["auto_dismiss"] = False
         super().__init__(**kwargs)
         self.current_avatar_path = current_avatar_path
         window_width, window_height = Window.size
-        self.width = window_width * 0.92  # 92% of screen width
+        self.width = window_width * 0.92
 
         aspect_ratio = 625 / 1080
         self.height = self.width * aspect_ratio

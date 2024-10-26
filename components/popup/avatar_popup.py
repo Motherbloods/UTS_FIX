@@ -24,6 +24,7 @@ CUSTOM_COLOR = get_color_from_hex("#050a30")
 
 class AvatarPopup(Popup):
     def __init__(self, current_avatar, on_avatar_change, **kwargs):
+        kwargs["auto_dismiss"] = False
         super().__init__(**kwargs)
         self.title = " "
         self.size_hint = (None, None)

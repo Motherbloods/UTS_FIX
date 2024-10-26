@@ -12,6 +12,7 @@ from components.animated_widget import AnimatedImage
 from components.common_ui import ImageButton
 from components.popup.result_popup import ResultPopup
 from components.popup.show_result_finish_popup import ResultPopupFinish
+from components.popup.hearts_empty_popup import HeartsEmptyPopup
 from components.popup.unlocked_popup import UnlockedPopup
 from config import Config
 from utils.game_utils import GameUtils
@@ -196,6 +197,18 @@ class SoalScreen(Screen):
             self.score += 1
         else:
             score_increase = SCORE_INCORRECT
+            if self.user_score + score_increase < 0:
+                score_increase = -self.user_score
+            if self.user_score <= 0:
+                score_increase = 0
+        original_user_score = self.user_score
+        new_user_score = original_user_score + score_increase
+
+        # If score would go negative, limit the deduction
+        if new_user_score < 0:
+            # Adjust score_increase so it only deducts down to 0
+            score_increase = -original_user_score
+            new_user_score = 0
 
         self.level_score += score_increase
         self.user_score += score_increase
@@ -251,7 +264,6 @@ class SoalScreen(Screen):
         unlocked_avatar = UserDataUtils.check_newly_unlocked_avatar(
             progress, self.zone, self.difficulty
         )
-        print(f"ini uncloded avatar {unlocked_avatar}")
         if unlocked_avatar:
 
             def show_result_popup():
@@ -260,7 +272,7 @@ class SoalScreen(Screen):
                     star_rating=star_rating,
                     level=self.level,
                     zone=self.zone,
-                    level_score=self.level_score,
+                    level_score=min(0, self.level_score),
                     on_play_again=self.restart_quiz,
                     on_next_level=self.go_to_next_level,
                     on_menu_level=self.play_sound_and_go_back,
@@ -277,7 +289,7 @@ class SoalScreen(Screen):
                 star_rating=star_rating,
                 level=self.level,
                 zone=self.zone,
-                level_score=self.level_score,
+                level_score=max(0, self.level_score),
                 on_play_again=self.restart_quiz,
                 on_next_level=self.go_to_next_level,
                 on_menu_level=self.play_sound_and_go_back,
@@ -328,7 +340,15 @@ class SoalScreen(Screen):
             self.wrong_answers = 0
             Clock.schedule_once(self.reset_hearts, 1.5)
         if self.remaining_hearts <= 0:
-            self.show_result()
+            hearts_needed = self.max_hearts - self.remaining_hearts
+            total_time_needed = hearts_needed * self.heart_regen_interval
+            popup = HeartsEmptyPopup(
+                time_remaining=total_time_needed,
+                use_point=True,
+                point=self.level_score,
+                goBack=self.go_back,
+            )
+            popup.open()
 
     def reset_hearts(self, dt):
         for i in range(self.remaining_hearts):

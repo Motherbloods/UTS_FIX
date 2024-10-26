@@ -25,6 +25,7 @@ class ResultPopup(Popup):
         on_play_again,
         **kwargs,
     ):
+        kwargs["auto_dismiss"] = False
         super(ResultPopup, self).__init__(**kwargs)
         self.title = " "
         self.separator_height = 0

@@ -26,6 +26,7 @@ class ResultPopupFinish(Popup):
         on_menu_level,
         **kwargs,
     ):
+        kwargs["auto_dismiss"] = False
         super(ResultPopupFinish, self).__init__(**kwargs)
         self.title = " "
         self.separator_height = 0

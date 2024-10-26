@@ -6,6 +6,7 @@ from utils.sound_manager import SoundManager
 
 class LockedLevel(Popup):
     def __init__(self, path, **kwargs):
+        kwargs["auto_dismiss"] = False
         super(LockedLevel, self).__init__(**kwargs)
         self.title = " "
         self.size_hint = (None, None)
