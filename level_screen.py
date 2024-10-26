@@ -5,7 +5,7 @@ from kivy.core.window import Window
 from components.common_ui import ImageButton
 from config import Config
 from kivy.uix.scrollview import ScrollView
-from main import MainApp
+from menu_home import MainApp
 from kivy.core.text import LabelBase
 from kivy.uix.image import Image
 from kivy.core.audio import SoundLoader
@@ -18,9 +18,11 @@ from soal_screen import SoalApp
 from utils.game_utils import GameUtils
 from utils.constants import *
 from utils.sound_manager import SoundManager
-from utils.user_data_utils import UserDataUtils
+from utils.hearts_utils import HeartsUtils
 from components.ui.background import Background
 from components.animated_widget import AnimatedImage
+from kivy.clock import Clock
+import time
 
 LabelBase.register(name="Bungee", fn_regular=FONTS_PATH)
 
@@ -35,7 +37,10 @@ class LevelScreen(RelativeLayout):
         self.difficulty = difficulty
         self.avatar_path = avatar_path
         self.static_avatar_path = static_avatar_path
-        self.remaining_hearts = UserDataUtils.get_remaining_hearts()
+        self.remaining_hearts = HeartsUtils.get_remaining_hearts()
+        self.max_hearts = 5
+        self.heart_regen_interval = 30
+        self.last_heart_regen_time = HeartsUtils.get_last_heart_regen_time()
         self.arrow_sound = SoundLoader.load("./assets/arrow_music.mp3")
 
         self.store = JsonStore("user_progress.json")
@@ -46,6 +51,8 @@ class LevelScreen(RelativeLayout):
 
         self.background = Background()
         self.add_widget(self.background)
+
+        Clock.schedule_interval(self.check_heart_regeneration, 5)
         self.setup_ui()
 
     def setup_ui(self):
@@ -87,8 +94,7 @@ class LevelScreen(RelativeLayout):
                     loop_reverse=True,
                     size_hint=(None, None),
                     size=(Window.width * 0.25, Window.width * 0.25),
-                    use_interval=True,  # Enable interval-based animation
-                    interval_duration=7,
+                    use_interval=True,
                 )
                 animated_button.bind(
                     on_press=lambda x, level=i: self.on_level_select(level)
@@ -112,6 +118,50 @@ class LevelScreen(RelativeLayout):
                 grid_layout.add_widget(level_btn)
 
         scroll_view.add_widget(grid_layout)
+
+    def check_heart_regeneration(self, dt):
+        current_time = time.time()
+        time_since_last_regen = current_time - self.last_heart_regen_time
+
+        if (
+            self.remaining_hearts < self.max_hearts
+            and time_since_last_regen >= self.heart_regen_interval
+        ):
+            self.regenerate_heart()
+            self.last_heart_regen_time = current_time
+            HeartsUtils.save_last_heart_regen_time(current_time)
+
+    def regenerate_heart(self):
+        if self.remaining_hearts < self.max_hearts:
+            self.remaining_hearts += 1
+            HeartsUtils.save_remaining_hearts(self.remaining_hearts)
+            self.update_hearts_display()
+
+    def update_hearts_display(self):
+        if hasattr(self, "hearts_layout"):
+            self.hearts_layout.clear_widgets()
+            for i in range(1, self.max_hearts + 1):
+                if i <= self.remaining_hearts:
+                    heart_image = Image(
+                        source=f"./assets/heart{i}.png",
+                        size_hint=(None, None),
+                        size=(100, 100),
+                        pos_hint={
+                            "center_x": 0.25 * i,
+                            "center_y": 0.2,
+                        },
+                    )
+                else:
+                    heart_image = Image(
+                        source="./assets/kosong.png",
+                        size_hint=(None, None),
+                        size=(100, 100),
+                        pos_hint={
+                            "center_x": 0.25 * i,
+                            "center_y": 0.2,
+                        },
+                    )
+                self.hearts_layout.add_widget(heart_image)
 
     def add_trophy_and_stars(self):
         icons_layout = FloatLayout(
@@ -156,12 +206,21 @@ class LevelScreen(RelativeLayout):
             font_size="20sp",
         )
 
-        hearts_layout = FloatLayout(
+        self.hearts_layout = FloatLayout(
             size_hint=(None, None),
             size=(200, 50),
             pos_hint={"center_x": 0.74, "center_y": 0.83},
         )
-        for i in range(1, 5 + 1):
+
+        icons_layout.add_widget(trophy_image)
+        icons_layout.add_widget(trophy_text)
+        icons_layout.add_widget(stars_image)
+        icons_layout.add_widget(stars_text)
+        icons_layout.add_widget(self.hearts_layout)
+
+        self.add_widget(icons_layout)
+
+        for i in range(1, self.max_hearts + 1):
             if i <= self.remaining_hearts:
                 heart_image = Image(
                     source=f"./assets/heart{i}.png",
@@ -182,24 +241,11 @@ class LevelScreen(RelativeLayout):
                         "center_y": 0.2,
                     },
                 )
-            hearts_layout.add_widget(heart_image)
-
-        icons_layout.add_widget(trophy_image)
-        icons_layout.add_widget(trophy_text)
-        icons_layout.add_widget(stars_image)
-        icons_layout.add_widget(stars_text)
-        icons_layout.add_widget(hearts_layout)
-
-        self.add_widget(icons_layout)
+            self.hearts_layout.add_widget(heart_image)
 
     def get_level_scores(self):
         progress = GameUtils.get_user_progress()
         return progress.get(f"{self.zone_name}_{self.difficulty}_level_scores", {})
-
-    def get_level_image_path(self, level):
-        return GameUtils.get_level_image_path(
-            level, self.current_level, self.level_scores
-        )
 
     def calculate_total_stars(self):
         return GameUtils.calculate_total_stars(self.level_scores)
@@ -216,11 +262,10 @@ class LevelScreen(RelativeLayout):
     def on_level_select(self, level):
         SoundManager.play_arrow_sound()
         if level <= self.current_level:
-            remaining_hearts = UserDataUtils.get_remaining_hearts()
-            if remaining_hearts <= 0:
+            if self.remaining_hearts <= 0:
                 max_hearts = 5
-                hearts_needed = max_hearts - remaining_hearts
-                time_per_heart = 5 * 60  # 5 menit dalam detik
+                hearts_needed = max_hearts - self.remaining_hearts
+                time_per_heart = 5 * 60
                 total_time_needed = hearts_needed * time_per_heart
 
                 popup = HeartsEmptyPopup(time_remaining=total_time_needed)
@@ -236,32 +281,10 @@ class LevelScreen(RelativeLayout):
         else:
             self.show_locked_popup()
 
-    def update_current_level(self, new_level):
-        progress = (
-            self.store.get("user_progress")
-            if self.store.exists("user_progress")
-            else {}
-        )
-        progress[f"{self.zone_name}_{self.difficulty}_current_level"] = new_level
-        self.store.put("user_progress", **progress)
-        self.current_level = new_level
-
-    def add_level_buttons(self):
-        grid_layout = GridLayout(cols=3, spacing=10, size_hint_y=None)
-        grid_layout.bind(minimum_height=grid_layout.setter("height"))
-        for i in range(1, 10):
-            level_image = self.get_level_image_path(i)
-            level_btn = ImageButton(
-                source=level_image,
-                size_hint=(None, None),
-                size=(Window.width * 0.25, Window.width * 0.25),
-            )
-            level_btn.bind(on_press=lambda x, level=i: self.on_level_select(level))
-            grid_layout.add_widget(level_btn)
-        return grid_layout
-
     def play_sound_and_go_back(self, instance):
         SoundManager.play_arrow_sound()
+        HeartsUtils.save_remaining_hearts(self.remaining_hearts)
+        HeartsUtils.save_last_heart_regen_time(self.last_heart_regen_time)
         self.go_back(instance)
 
     def go_back(self, instance):

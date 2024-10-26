@@ -17,6 +17,7 @@ from components.popup.unlocked_popup import UnlockedPopup
 from config import Config
 from utils.game_utils import GameUtils
 from utils.user_data_utils import UserDataUtils
+from utils.hearts_utils import HeartsUtils
 from utils.constants import *
 from utils.sound_manager import SoundManager
 from components.ui.background import Background
@@ -40,10 +41,13 @@ class SoalScreen(Screen):
         self.level_score = 0
         self.wrong_answers = 0
         self.empty_heart_image = "./assets/kosong.png"
-        self.remaining_hearts = UserDataUtils.get_remaining_hearts()
+        self.remaining_hearts = HeartsUtils.get_remaining_hearts()
         self.max_hearts = 5
-        self.heart_regen_interval = 15
-        self.last_heart_regen_time = UserDataUtils.get_last_heart_regen_time()
+        self.heart_regen_interval = 30
+
+        App.get_running_app().bind(on_stop=self.on_app_stop)
+
+        self.last_heart_regen_time = HeartsUtils.get_last_heart_regen_time()
         self.hearts = []
         self.heart_positions = []
         self.questions_data = UserDataUtils.load_questions(
@@ -58,7 +62,7 @@ class SoalScreen(Screen):
         self.background = Background()
         self.main_layout.add_widget(self.background)
 
-        Clock.schedule_interval(self.check_heart_regeneration, 1)
+        Clock.schedule_interval(self.check_heart_regeneration, 5)
         self.setup_ui()
 
     def setup_ui(self):
@@ -306,12 +310,12 @@ class SoalScreen(Screen):
         ):
             self.regenerate_heart()
             self.last_heart_regen_time = current_time
-            UserDataUtils.save_last_heart_regen_time(current_time)
+            HeartsUtils.save_last_heart_regen_time(current_time)
 
     def regenerate_heart(self):
         if self.remaining_hearts < self.max_hearts:
             self.remaining_hearts += 1
-            UserDataUtils.save_remaining_hearts(self.remaining_hearts)
+            HeartsUtils.save_remaining_hearts(self.remaining_hearts)
 
             # Update heart display
             heart_index = self.remaining_hearts - 1
@@ -326,7 +330,7 @@ class SoalScreen(Screen):
             self.remaining_hearts -= 1
 
             self.last_heart_regen_time = time.time()
-            UserDataUtils.save_last_heart_regen_time(self.last_heart_regen_time)
+            HeartsUtils.save_last_heart_regen_time(self.last_heart_regen_time)
 
             self.animated_heart.pos_hint = {
                 "center_x": hearts_x_positions[self.remaining_hearts],
@@ -367,7 +371,7 @@ class SoalScreen(Screen):
 
     def go_to_next_level(self, instance):
         SoundManager.play_arrow_sound()
-        UserDataUtils.save_remaining_hearts(self.remaining_hearts)
+        HeartsUtils.save_remaining_hearts(self.remaining_hearts)
         self.dismiss_popup()
         next_level = self.level + 1
         App.get_running_app().stop()
@@ -415,7 +419,7 @@ class SoalScreen(Screen):
     def go_back(self, instance):
 
         self.wrong_answers = 0
-        UserDataUtils.save_remaining_hearts(self.remaining_hearts)
+        HeartsUtils.save_remaining_hearts(self.remaining_hearts)
         App.get_running_app().stop()
         from level_screen import LevelScreenApp
 
@@ -425,6 +429,10 @@ class SoalScreen(Screen):
             avatar_path=self.avatar_path,
             static_avatar_path="path/to/static_avatar",
         ).run()
+
+    def on_app_stop(self, *args):
+        HeartsUtils.save_remaining_hearts(self.remaining_hearts)
+        HeartsUtils.save_last_heart_regen_time(self.last_heart_regen_time)
 
 
 class SoalApp(App):

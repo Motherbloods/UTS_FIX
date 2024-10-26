@@ -10,7 +10,7 @@ from components.common_ui import ImageButton
 from config import Config
 from components.popup.settings_popup import SettingsManager
 from kivy.clock import Clock
-from main import MainApp
+from menu_home import MainApp
 from components.ui.background import Background
 from utils.sound_manager import SoundManager
 from utils.keyboard_manager import KeyboardManager
@@ -148,7 +148,7 @@ class MainWidget(RelativeLayout):
 
     def go_back(self, instance):
         App.get_running_app().stop()
-        from main import MainApp
+        from menu_home import MainApp
 
         MainApp().run()
 
